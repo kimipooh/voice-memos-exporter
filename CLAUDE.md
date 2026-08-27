@@ -25,10 +25,7 @@ export_voice_memos.py
 tests
 ```
 
-Tkinter GUI (`voice_memos_exporter.py`) は既存機能として維持する。
-
-`.app` / PyInstaller ビルドは optional。
-**`.app` の build 成功を開発完了条件にしない。**
+このforkはPython CLI専用であり、GUIとmacOS app buildは保守しない。
 
 ---
 
@@ -38,12 +35,12 @@ Tkinter GUI (`voice_memos_exporter.py`) は既存機能として維持する。
 Voice Memos DB
       ↓
   vmx_core.py
-   ↓       ↓
- CLI       GUI
+      ↓
+export_voice_memos.py
 ```
 
 - 共通ロジックは可能な限り `vmx_core.py` に置く。
-- CLI と GUI で export 処理を二重実装しない。
+- 現行インターフェースはCLIだけとする。
 - 機能追加・バグ修正も、まず `vmx_core.py` への配置を検討する。
 
 ---
@@ -198,7 +195,6 @@ CLI の場合、Full Disk Access が必要なのは Python を実際に実行す
 
 | 項目 | 内容 |
 | --- | --- |
-| stale Treeview ID | 検索後でも `Item xxxx not found` を発生させない |
 | slash title | `Interview / Hanoi` のようなタイトルでも export できる |
 | numeric-only title | `123` / `2026` / `001` などでも失敗しない |
 | partial failure | 1 件の失敗で全 export を停止しない |
@@ -218,12 +214,9 @@ CLI の場合、Full Disk Access が必要なのは Python を実際に実行す
 現在の基準:
 
 ```text
-49 tests
+CLI/core tests
 OK
 ```
-
-Tkinter が無い環境では GUI テスト 1 件の skip を許容する。
-ただし skip 理由を必ず報告する。
 
 CLI についても最低限、以下を確認する。
 
@@ -255,7 +248,7 @@ MIT licensed と断定しない
 - 既存構造を維持する。全面書き換えを避ける。
 - 変更した実装だけを文書へ反映する。
 - 未実装機能を「対応済み」と書かない。
-- Apple Silicon / Intel / `.app` build について、未検証事項は未検証と明示する。
+- GUIやapp buildを現行機能として説明しない。
 
 以下を変更した場合は整合性を確認する。
 

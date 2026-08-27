@@ -16,11 +16,9 @@ macOS Voice Memos の DB と録音原本を読み取り、
 vmx_core.py          共通ロジック（最優先）
 export_voice_memos.py  CLI
 tests/                 テスト
-voice_memos_exporter.py  Tkinter GUI（既存機能として維持）
 ```
 
-`.app` / PyInstaller ビルドは optional。
-**`.app` の build 成功を開発完了条件にしない。**
+このforkはPython CLI専用であり、GUIとmacOS app buildは保守しない。
 
 ---
 
@@ -30,12 +28,12 @@ voice_memos_exporter.py  Tkinter GUI（既存機能として維持）
 Voice Memos DB
       ↓
   vmx_core.py
-   ↓       ↓
- CLI       GUI
+      ↓
+export_voice_memos.py
 ```
 
 - 共通ロジックは `vmx_core.py` に置く。
-- CLI と GUI で export 処理を二重実装しない。
+- 現行インターフェースはCLIだけとする。
 
 ---
 
@@ -148,7 +146,6 @@ terminal application 側に権限が必要。
 
 ## 既知修正を壊さない
 
-- stale Treeview ID: 検索後に `Item xxxx not found` を出さない
 - slash title: `Interview / Hanoi` でも export 可能
 - numeric-only title: `123` / `2026` / `001` でも失敗しない
 - partial failure: 1 件の失敗で全 export を停止しない
@@ -166,11 +163,9 @@ terminal application 側に権限が必要。
 基準:
 
 ```text
-49 tests
+CLI/core tests
 OK
 ```
-
-Tkinter が無い環境では GUI テスト 1 件の skip を許容するが、skip 理由を報告する。
 
 CLI は最低限以下を確認する。
 
@@ -197,7 +192,7 @@ MIT licensed と断定しない
 - 既存構造を維持し、全面書き換えを避ける。
 - 変更した実装だけを文書へ反映する。
 - 未実装機能を「対応済み」と書かない。
-- `.app` build 等の未検証事項は未検証と明示する。
+- GUIやapp buildを現行機能として説明しない。
 - `README.md` / `README-ja.md` / `docs/CHANGELOG.md` の整合性を確認する。
 - `AGENTS.md` / `CLAUDE.md` / `.codex/tasks/` 配下は UTF-8 BOM なしで保存する。
 

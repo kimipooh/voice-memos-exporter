@@ -5,6 +5,8 @@
 監査日: 2026-08-27
 **この Phase ではコードを一切変更していない。**
 
+> **Historical audit:** This report describes the upstream GUI and packaging files as they existed at the time of the audit. They are not current supported interfaces in this CLI-only fork.
+
 ---
 
 ## 1. Repository structure

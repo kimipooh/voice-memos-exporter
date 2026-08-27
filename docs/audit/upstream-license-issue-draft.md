@@ -2,6 +2,8 @@
 
 **未投稿。ユーザの承認後に投稿すること。**
 
+> **Historical draft:** This text predates the fork's CLI-only change. Its reference to a graphical export path describes the earlier implementation, not current support.
+
 Background and legal notes are retained in [`upstream-license-request.md`](upstream-license-request.md).
 
 ## Issue body

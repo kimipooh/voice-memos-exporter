@@ -1,4 +1,4 @@
-"""GUI-independent database and export logic for Voice Memos Exporter."""
+"""Database and export logic for the Voice Memos Exporter CLI."""
 
 from __future__ import annotations
 

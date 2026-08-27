@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - fork
 
 The upstream `1.0.2` tag is not recorded in the upstream changelog.
+Entries below that mention the GUI or app packaging record work completed before the later CLI-only decision; the Removed section records their subsequent removal.
 
 ### Fixed
 
@@ -21,6 +22,7 @@ The upstream `1.0.2` tag is not recorded in the upstream changelog.
 
 ### Changed
 
+- The fork now focuses exclusively on the Python command-line interface.
 - Set exported-file `mtime` and `atime` from the recording's `ZDATE`; creation time is not explicitly set or preserved (partial support for upstream Issue #1).
 - Classified recognized iCloud placeholders as not downloaded and skipped rather than failed.
 - Moved GUI copying to a worker thread with progress and cancellation.
@@ -37,6 +39,12 @@ The upstream `1.0.2` tag is not recorded in the upstream changelog.
 - Added read-only database access with temporary snapshots when required for WAL handling.
 - Added database diagnostics for missing, permission-denied, incompatible-schema, locked, corrupt, and unknown states.
 - Added `unittest` regression coverage for database access, filenames, destinations, exports, CLI behavior, and GUI selection.
+
+### Removed
+
+- Removed the Tkinter GUI and its GUI-only tests.
+- Removed PyInstaller/macOS app packaging files and related image assets.
+- Removed `requirements.txt`, which contained only the packaging-time PyInstaller dependency; the CLI uses only the Python standard library.
 
 ### Security
 

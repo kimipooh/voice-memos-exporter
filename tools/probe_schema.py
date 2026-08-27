@@ -4,7 +4,7 @@
 Purpose
 -------
 Confirm the real on-disk schema so the exporter can be built on a *stable*
-recording identity instead of Tkinter Treeview item IDs.
+recording identity instead of the historical upstream GUI's Treeview item IDs.
 
 Safety guarantees
 -----------------

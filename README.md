@@ -2,17 +2,9 @@
 
 [日本語版: README-ja.md](README-ja.md)
 
-<p align="center">
-  <img src="app_icon.png" alt="Voice Memos Exporter Icon" width="128" height="128">
-</p>
-
-This is a development fork of [rudrakabir/voice-memos-exporter](https://github.com/rudrakabir/voice-memos-exporter), created by [rudrakabir](https://github.com/rudrakabir). Thanks to the original author for building a useful bulk exporter for macOS Voice Memos. This fork focuses on reliable exports and supported Python command-line and graphical interfaces.
+This is a development fork of [rudrakabir/voice-memos-exporter](https://github.com/rudrakabir/voice-memos-exporter), created by [rudrakabir](https://github.com/rudrakabir). The original project made it possible to bulk export macOS Voice Memos, and this fork is grateful to the original author for that useful work. This fork focuses on improving export reliability and providing a Python command-line tool.
 
 The upstream license is currently unclear. This fork is not offered as an independent release or binary distribution; see [License](#license).
-
-<p align="center">
-  <img src="screenshot.png" alt="Voice Memos Exporter Screenshot" width="800">
-</p>
 
 If the original project is useful to you, consider supporting its author:<br>
 ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/rudrakabir)
@@ -38,49 +30,44 @@ The distributed upstream 1.0.2 binary was built from tag `1.0.2`, before the lat
 - The SQLite database is opened read-only. When needed for WAL handling, the database and sidecar files are copied to a temporary snapshot and the snapshot is removed after reading.
 - Database problems are classified as missing, permission denied, unsupported schema, locked, corrupt, or unknown. Full Disk Access guidance is used only for permission failures.
 - An iCloud placeholder is classified as **not downloaded** and skipped with `File not available locally`; the tool does not initiate an iCloud download.
-- GUI copying runs on a worker thread and provides progress plus **Cancel**.
 - Export explicitly sets modification time (`mtime`) and access time (`atime`) from the recording's `ZDATE` (partial support for upstream Issue #1).
-- Shared logic lives in `vmx_core.py`, with regression tests for the core, CLI, and GUI selection behavior.
-- The PyInstaller spec requests `target_arch='universal2'` (upstream Issue #4), but that build has not been verified.
-- Both the CLI and GUI display recording counts (upstream Issue #3).
+- Shared export and database logic lives in `vmx_core.py`, with regression tests for the core and CLI behavior.
+- CLI listings display recording counts (upstream Issue #3).
 
 ## Requirements and compatibility
 
-- macOS with Voice Memos data under `~/Library/Group Containers/group.com.apple.VoiceMemos.shared/`. The optional app spec declares macOS 12.0 as its minimum.
-- Python 3 with the standard library. Runtime use does not require packages from `requirements.txt`; its `pyinstaller` entry is only for building the optional app.
+- macOS with Voice Memos data under `~/Library/Group Containers/group.com.apple.VoiceMemos.shared/`.
+- Python 3.9 or later. The CLI uses only the Python standard library and has no third-party runtime dependencies.
 - Full Disk Access for the process that reads the Voice Memos database.
 
 ### Python source compatibility
 
-The source uses only the Python standard library and contains no architecture-dependent code. It has been verified on Apple Silicon. The same source is expected to run on Intel Macs, but no Intel Mac has been tested.
-
-### Prebuilt app compatibility
-
-The app distributed by upstream is Apple Silicon-only (upstream Issue #4). This fork answers that limitation by providing direct Python source execution. Its `.spec` now specifies `target_arch='universal2'`, but a Universal 2 build has not been verified. Building one requires a Universal 2 Python, such as the python.org macOS universal2 installer; a single-architecture Homebrew Python cannot produce that bundle.
+The source uses only the Python standard library and contains no architecture-dependent code. The CLI/core suite is verified with Python 3.9.6 on Apple Silicon. Intel Mac source execution has not been tested.
 
 ## Full Disk Access
 
-Voice Memos data is protected by macOS TCC and requires Full Disk Access. Permission must be granted to the process that actually accesses the database:
+Voice Memos data is protected by macOS TCC and may require Full Disk Access. Grant access to the terminal application that actually starts Python, such as Terminal, iTerm, or another terminal application (including an IDE's integrated terminal host). Do not add the `python3` binary by itself.
 
-- For the Python CLI or GUI started from source, grant access to the terminal application that starts Python, such as Terminal.app, iTerm2, or the VS Code application hosting its integrated terminal. Do not add the `python3` binary by itself.
-- For a packaged `.app`, grant access to the `.app` itself.
-
-Open **System Settings → Privacy & Security → Full Disk Access**, add and enable the applicable application, and then **restart that application** so the change takes effect.
+The exact labels and location may vary by macOS version. In the privacy and security settings, enable Full Disk Access for that terminal application, then restart it so the change takes effect.
 
 The database is still opened read-only. If the CLI detects `DbStatus.PERMISSION_DENIED`, it prints Full Disk Access guidance and exits with status 1. Missing databases and unsupported schemas receive different diagnostics.
 
-## Command line (recommended)
+## Command line
 
-The CLI is the recommended, formally supported interface.
+The CLI is this fork's only supported interface.
 
 ```bash
 python3 export_voice_memos.py --help
 python3 export_voice_memos.py --list
 python3 export_voice_memos.py --list --include-trash
 python3 export_voice_memos.py --list --search "Project"
-python3 export_voice_memos.py --all --output ~/Desktop/VoiceMemos
+python3 export_voice_memos.py --all --output ~/Desktop/voice-memos-export
 python3 export_voice_memos.py --search "Project" --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
+python3 export_voice_memos.py \
+  --all \
+  --include-trash \
+  --output ~/Desktop/voice-memos-export
 python3 export_voice_memos.py \
   --all \
   --from 2026-07-01 \
@@ -90,7 +77,7 @@ python3 export_voice_memos.py \
 
 At least one of `--list`, `--all`, or `--search` is required. `--list --search TEXT` lists only matches; without `--list`, `--all` or `--search` performs an export and requires `--output`.
 
-By default, recordings in Recently Deleted are excluded from listing, searching, dry runs, and export. Add `--include-trash` to include them. The GUI also excludes them by default.
+By default, recordings in Recently Deleted are excluded from listing, searching, dry runs, and export. Add `--include-trash` to include them. Internally, this state is detected from `ZCLOUDRECORDING.ZEVICTIONDATE`.
 
 | Option | Meaning |
 |---|---|
@@ -147,16 +134,6 @@ Export prints one result per recording followed by Total, Exported, Skipped, and
 
 For a real export, the tool attempts to create a diagnostic log in the selected output directory only when at least one item is skipped or fails. If log creation succeeds, its path is printed. Each JSON-lines record includes the recording identifier, title, source path, destination path, outcome, exception type, and exception message. The log can therefore contain private titles and paths, but it never contains the audio itself and is not transmitted anywhere.
 
-## Graphical interface
-
-The existing Tkinter GUI remains a formally supported interface:
-
-```bash
-python3 voice_memos_exporter.py
-```
-
-It supports search, stable selection across filtering, Select All/Deselect All, progress, cancellation, and per-recording result handling. The GUI and CLI both call the same export implementation in `vmx_core.py`.
-
 ## Architecture
 
 ```text
@@ -164,11 +141,10 @@ Voice Memos DB / files
         ↓
     vmx_core.py
         ↓
-   ┌────┴────┐
-  CLI       GUI
+export_voice_memos.py
 ```
 
-`vmx_core.py` is the reliability boundary: it diagnoses and reads the database, resolves sources, generates safe destinations, exports, and writes diagnostics. The CLI and GUI are presentation layers over that shared behavior.
+`vmx_core.py` is the reliability boundary: it diagnoses and reads the database, resolves sources, generates safe destinations, exports, and writes diagnostics. `export_voice_memos.py` provides the command-line interface over that behavior.
 
 ## Exported file metadata and format
 
@@ -183,17 +159,6 @@ Recordings observed on a real Voice Memos database used a `.qta` extension and a
 - Its data flow is: read the database, read an audio file, and copy it to the selected destination. A temporary read snapshot may be used for safe WAL handling and is removed afterward.
 - Diagnostic logs are written only to the selected output directory, contain titles and paths but no audio, and are never sent externally.
 
-## Optional `.app` build
-
-The PyInstaller spec remains available as an optional, auxiliary packaging path:
-
-```bash
-python3 -m pip install -r requirements.txt
-pyinstaller voice_memos_exporter.spec
-```
-
-The spec requests Universal 2. Building and running an app remains environment-dependent because of Python architecture, Apple Silicon/Intel targeting, code signing, notarization, Gatekeeper, and which process receives Full Disk Access. No `.app` build was required or verified for this fork documentation work, and no fork Release is available.
-
 ## Development and tests
 
 ```bash
@@ -202,23 +167,16 @@ python3 -m unittest discover -s tests -t .
 
 The test suite uses `unittest` from the standard library; pytest is not required.
 
-Measured on 2026-08-27 (macOS 26, Apple Silicon):
-
-| Python | Result |
-|---|---|
-| `/usr/bin/python3` (Tkinter available) | 49 tests, **OK**, no skips |
-| Homebrew `python@3.12` (no `_tkinter`) | 49 tests, **OK (skipped=1)** |
-
-The single skip is the GUI selection test. It skips whenever Tkinter cannot be used — either the Python build ships no `_tkinter` module (Homebrew Python does not) or no display can be connected. Every non-GUI test runs in both cases.
+The suite covers database access, listing, search, date filtering, trash handling, dry runs, JSON output, safe and duplicate filenames, partial failures, and read-only behavior. It has no display-system dependency.
 
 ## Known limitations
 
 - The upstream license is unresolved, so this fork has no Release or binary distribution.
-- Intel Mac source execution and Universal 2 app builds have not been tested.
+- Intel Mac source execution has not been tested.
+- The reader depends on Apple's undocumented internal Voice Memos database schema, including `ZCLOUDRECORDING.ZEVICTIONDATE` for Recently Deleted state. Future macOS changes may require updates.
 - Exported recordings retain their source extension, including `.qta`; no media conversion is performed.
 - Creation time (`birthtime`) is not set or preserved; only `mtime` and `atime` are explicitly set.
 - iCloud-only recordings are not downloaded. Recognized placeholders are skipped.
-- A future macOS Voice Memos schema change may become incompatible with the current reader.
 
 ## License
 
