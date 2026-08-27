@@ -11,6 +11,7 @@ The upstream `1.0.2` tag is not recorded in the upstream changelog.
 
 ### Fixed
 
+- Excluded recordings in Recently Deleted from default CLI and GUI listing, search, dry-run, and export based on `ZEVICTIONDATE`.
 - Preserved GUI selections across search and filtering by replacing stale Treeview item IDs with stable recording keys (upstream Issue #7).
 - Sanitized `/`, `\`, `:`, control characters, empty names, and overlong UTF-8 filenames, fixing export failures for titles containing `/` (upstream Issue #2).
 - Coerced database and title values safely so numeric-only titles no longer raise `TypeError`.
@@ -27,6 +28,7 @@ The upstream `1.0.2` tag is not recorded in the upstream changelog.
 
 ### Added
 
+- Added `Recording.is_trashed`, the `--include-trash` CLI option, list status display, and additive JSON `status` values.
 - Added `vmx_core.py` as the shared database and export layer for the CLI and GUI.
 - Added `export_voice_memos.py` with listing, JSON output, search, full export, dry-run, database override, timestamp control, and documented exit codes.
 - Added recording counts to CLI listings and the GUI window title (upstream Issue #3).

@@ -54,6 +54,25 @@ class DatabaseTests(unittest.TestCase):
             self.assertTrue(all(item.date is None and item.duration is None for item in recordings))
             self.assertEqual(warnings, [])
 
+    def test_eviction_date_marks_trash_and_default_load_excludes_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = create_database(
+                directory,
+                [
+                    (1, "one", "one.m4a", "Active", None, 1, 1, None),
+                    (2, "two", "two.m4a", "Trash", None, 2, 1, 800000000),
+                ],
+            )
+            with connect_readonly(db_path) as conn:
+                active, _ = load_recordings(conn)
+            with connect_readonly(db_path) as conn:
+                all_recordings, _ = load_recordings(conn, include_trashed=True)
+            self.assertEqual([item.title for item in active], ["Active"])
+            self.assertEqual(
+                [(item.title, item.is_trashed) for item in all_recordings],
+                [("Trash", True), ("Active", False)],
+            )
+
     def test_empty_paths_are_excluded_with_warning(self):
         with tempfile.TemporaryDirectory() as directory:
             db_path = create_database(

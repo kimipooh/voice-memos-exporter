@@ -13,7 +13,7 @@ import export_voice_memos
 from tests.fixtures import create_audio, create_database
 
 
-def row(index, title, rel_path=None, date=12345, duration=12.5):
+def row(index, title, rel_path=None, date=12345, duration=12.5, eviction_date=None):
     return (
         index,
         f"uid-{index}",
@@ -22,8 +22,15 @@ def row(index, title, rel_path=None, date=12345, duration=12.5):
         None,
         date,
         duration,
-        None,
+        eviction_date,
     )
+
+
+def active_and_trash_rows():
+    return [
+        *[row(index, f"Active {index}") for index in range(1, 6)],
+        *[row(index, f"Trash {index}", eviction_date=800000000 + index) for index in range(6, 10)],
+    ]
 
 
 def digest(path):
@@ -56,6 +63,116 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("--list", result.stdout)
         self.assertIn("--dry-run", result.stdout)
+        self.assertIn("--include-trash", result.stdout)
+
+    def test_list_excludes_trash_by_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            code, stdout, _ = self.invoke(["--list", "--db", db_path])
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 5", stdout)
+            self.assertNotIn("Trash 6", stdout)
+            self.assertNotIn("STATUS", stdout)
+
+    def test_list_include_trash_shows_all_with_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            code, stdout, _ = self.invoke(
+                ["--list", "--include-trash", "--db", db_path]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 9", stdout)
+            self.assertIn("STATUS", stdout)
+            self.assertIn("active", stdout)
+            self.assertIn("trash", stdout)
+
+    def test_all_excludes_trash_by_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            output = os.path.join(directory, "output")
+            code, _, _ = self.invoke(["--all", "--output", output, "--db", db_path])
+            self.assertEqual(code, 0)
+            self.assertEqual(len(os.listdir(output)), 5)
+            self.assertFalse(os.path.exists(os.path.join(output, "Trash 6.m4a")))
+
+    def test_all_include_trash_exports_all(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            output = os.path.join(directory, "output")
+            code, _, _ = self.invoke(
+                ["--all", "--include-trash", "--output", output, "--db", db_path]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(len(os.listdir(output)), 9)
+            self.assertTrue(os.path.isfile(os.path.join(output, "Trash 6.m4a")))
+
+    def test_search_excludes_matching_trash_by_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            output = os.path.join(directory, "output")
+            code, _, stderr = self.invoke(
+                ["--search", "Trash 6", "--output", output, "--db", db_path]
+            )
+            self.assertEqual(code, 1)
+            self.assertIn("No recordings matched", stderr)
+            self.assertFalse(os.path.exists(output))
+
+    def test_search_include_trash_exports_match(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            output = os.path.join(directory, "output")
+            code, _, _ = self.invoke(
+                [
+                    "--search",
+                    "Trash 6",
+                    "--include-trash",
+                    "--output",
+                    output,
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(os.listdir(output), ["Trash 6.m4a"])
+
+    def test_dry_run_respects_include_trash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            output = os.path.join(directory, "output")
+            code, stdout, _ = self.invoke(
+                ["--all", "--dry-run", "--output", output, "--db", db_path]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total:    5", stdout)
+            self.assertNotIn("Trash 6", stdout)
+            code, stdout, _ = self.invoke(
+                [
+                    "--all",
+                    "--dry-run",
+                    "--include-trash",
+                    "--output",
+                    output,
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total:    9", stdout)
+            self.assertIn("Trash 6", stdout)
+            self.assertFalse(os.path.exists(output))
+
+    def test_json_adds_status_field(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = self.make_fixture(directory, active_and_trash_rows())
+            code, stdout, _ = self.invoke(
+                ["--list", "--json", "--include-trash", "--db", db_path]
+            )
+            payload = json.loads(stdout)
+            self.assertEqual(code, 0)
+            self.assertEqual(len(payload), 9)
+            self.assertEqual(
+                {item["status"] for item in payload}, {"active", "trash"}
+            )
 
     def test_list_text_includes_count_and_titles(self):
         with tempfile.TemporaryDirectory() as directory:

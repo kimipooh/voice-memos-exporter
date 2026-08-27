@@ -76,6 +76,7 @@ CLIは推奨する正式サポート対象のインターフェースです。
 ```bash
 python3 export_voice_memos.py --help
 python3 export_voice_memos.py --list
+python3 export_voice_memos.py --list --include-trash
 python3 export_voice_memos.py --list --search "Project"
 python3 export_voice_memos.py --all --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --search "Project" --output ~/Desktop/VoiceMemos
@@ -83,6 +84,8 @@ python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 ```
 
 `--list`、`--all`、`--search` の少なくとも1つが必要です。`--list --search TEXT` は一致した録音だけを一覧表示します。`--list` がなければ、`--all` または `--search` が書き出しを実行するため、`--output` が必要です。
+
+既定では「最近削除した項目」の録音を一覧、検索、dry-run、書き出しから除外します。含める場合は `--include-trash` を指定します。GUIでも既定で除外します。
 
 | オプション | 意味 |
 |---|---|
@@ -93,6 +96,7 @@ python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 | `--output DIR`, `-o DIR` | 書き出し先ディレクトリです。 |
 | `--dry-run` | ソースと出力先を解決して結果を表示しますが、書き出しファイル、ログ、出力ディレクトリを作りません。 |
 | `--json` | `--list` の結果を1つのJSON配列として出力します。 |
+| `--include-trash` | 「最近削除した項目」の録音を含めます。テキスト一覧には `STATUS` 列を追加します。 |
 | `--db PATH` | ボイスメモデータベースのパスを上書きします。 |
 | `--no-set-times` | 書き出したファイルの `mtime` と `atime` を設定しません。 |
 | `--version` | ツールのバージョンを表示して終了します。 |
@@ -125,6 +129,8 @@ pk:102             2026-08-26 15:30  1:02:03 icloud  Project interview
 | `missing` | データベース行はありますが、ローカルファイルもiCloudプレースホルダも見つかりません。書き出し時は失敗として扱い、残りを続行します。 |
 
 `--json` を指定すると、stdoutにはJSON配列だけを出力します。0件一致の `--list --json --search TEXT` は `[]` を返し、終了コードは0です。
+各録音オブジェクトには追加フィールド `status` が含まれ、値は `active` または `trash` です。
+`--include-trash` 指定時のテキスト出力にも同じ値の `STATUS` 列を追加し、既定のテキストレイアウトは変更しません。
 
 ### 書き出し結果と診断情報
 

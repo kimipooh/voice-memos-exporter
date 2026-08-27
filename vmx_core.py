@@ -57,6 +57,7 @@ class Recording:
     date: datetime | None
     duration: float | None
     date_epoch: float | None = None
+    is_trashed: bool = False
 
 
 class SourceState(Enum):
@@ -235,7 +236,9 @@ def _coerce_text(value) -> str | None:
     return str(value)
 
 
-def load_recordings(conn: sqlite3.Connection) -> tuple[list[Recording], list[str]]:
+def load_recordings(
+    conn: sqlite3.Connection, *, include_trashed: bool = False
+) -> tuple[list[Recording], list[str]]:
     columns = {row[1] for row in conn.execute("PRAGMA table_info(ZCLOUDRECORDING)")}
     if "ZPATH" not in columns:
         raise sqlite3.OperationalError("ZCLOUDRECORDING.ZPATH column is missing")
@@ -264,6 +267,9 @@ def load_recordings(conn: sqlite3.Connection) -> tuple[list[Recording], list[str
     used_keys = set()
     for raw_row in rows:
         row = dict(zip(selected, raw_row))
+        is_trashed = row.get("ZEVICTIONDATE") is not None
+        if is_trashed and not include_trashed:
+            continue
         rel_path = _coerce_text(row.get("ZPATH"))
         if rel_path in (None, ""):
             missing_paths += 1
@@ -305,7 +311,17 @@ def load_recordings(conn: sqlite3.Connection) -> tuple[list[Recording], list[str
             warnings.append(f"Duplicate recording key {base_key!r}; assigned {key!r}")
         used_keys.add(key)
         recordings.append(
-            Recording(key, pk, unique_id, rel_path, title, date, duration, date_epoch)
+            Recording(
+                key,
+                pk,
+                unique_id,
+                rel_path,
+                title,
+                date,
+                duration,
+                date_epoch,
+                is_trashed,
+            )
         )
     if missing_paths:
         warnings.append(f"Excluded {missing_paths} recording(s) with an empty ZPATH")

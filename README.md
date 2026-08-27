@@ -76,6 +76,7 @@ The CLI is the recommended, formally supported interface.
 ```bash
 python3 export_voice_memos.py --help
 python3 export_voice_memos.py --list
+python3 export_voice_memos.py --list --include-trash
 python3 export_voice_memos.py --list --search "Project"
 python3 export_voice_memos.py --all --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --search "Project" --output ~/Desktop/VoiceMemos
@@ -83,6 +84,8 @@ python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 ```
 
 At least one of `--list`, `--all`, or `--search` is required. `--list --search TEXT` lists only matches; without `--list`, `--all` or `--search` performs an export and requires `--output`.
+
+By default, recordings in Recently Deleted are excluded from listing, searching, dry runs, and export. Add `--include-trash` to include them. The GUI also excludes them by default.
 
 | Option | Meaning |
 |---|---|
@@ -93,6 +96,7 @@ At least one of `--list`, `--all`, or `--search` is required. `--list --search T
 | `--output DIR`, `-o DIR` | Export destination directory. |
 | `--dry-run` | Resolve sources and destinations and show results without writing export files, logs, or the output directory. |
 | `--json` | Write `--list` output as one JSON array. |
+| `--include-trash` | Include recordings in Recently Deleted. Text listings add a `STATUS` column. |
 | `--db PATH` | Override the Voice Memos database path. |
 | `--no-set-times` | Do not set exported file `mtime` and `atime`. |
 | `--version` | Print the tool version and exit. |
@@ -125,6 +129,8 @@ pk:102             2026-08-26 15:30  1:02:03 icloud  Project interview
 | `missing` | The database row exists, but neither a local file nor an iCloud placeholder was found. Export treats it as a failure and continues. |
 
 With `--json`, stdout is only a JSON array. A zero-match `--list --json --search TEXT` returns `[]` with exit code 0.
+Each recording object includes an additive `status` field whose value is `active` or `trash`.
+With `--include-trash`, text output adds a `STATUS` column with the same values; the default text layout is unchanged.
 
 ### Export output and diagnostics
 

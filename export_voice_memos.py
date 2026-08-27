@@ -39,6 +39,11 @@ def _parser():
     parser.add_argument("--output", "-o", metavar="DIR", help="export destination directory")
     parser.add_argument("--dry-run", action="store_true", help="show exports without writing files")
     parser.add_argument("--json", action="store_true", help="write --list output as JSON")
+    parser.add_argument(
+        "--include-trash",
+        action="store_true",
+        help="include recordings in Recently Deleted",
+    )
     parser.add_argument("--db", default=vmx_core.DEFAULT_DB_PATH, metavar="PATH", help="Voice Memos database path")
     parser.add_argument("--no-set-times", action="store_true", help="do not set exported file timestamps")
     parser.add_argument("--version", action="version", version=vmx_core.TOOL_VERSION)
@@ -75,7 +80,14 @@ def _duration(value):
     return f"{seconds // 60}:{seconds % 60:02d}"
 
 
-def _list_recordings(all_recordings, selected, recordings_dir, as_json, filtered=False):
+def _list_recordings(
+    all_recordings,
+    selected,
+    recordings_dir,
+    as_json,
+    filtered=False,
+    show_status=False,
+):
     if as_json:
         payload = [
             {
@@ -83,6 +95,7 @@ def _list_recordings(all_recordings, selected, recordings_dir, as_json, filtered
                 "date": recording.date.isoformat() if recording.date else None,
                 "duration": recording.duration,
                 "local": _local_value(recordings_dir, recording),
+                "status": "trash" if recording.is_trashed else "active",
                 "title": _clean_line(recording.title),
             }
             for recording in selected
@@ -94,13 +107,18 @@ def _list_recordings(all_recordings, selected, recordings_dir, as_json, filtered
         print(f"Total recordings: {len(all_recordings)} (matched: {len(selected)})")
     else:
         print(f"Total recordings: {len(all_recordings)}")
-    print(f"{'KEY':<18} {'DATE':<16} {'DURATION':>8} {'LOCAL':<7} TITLE")
+    if show_status:
+        print(f"{'KEY':<18} {'DATE':<16} {'DURATION':>8} {'LOCAL':<7} {'STATUS':<7} TITLE")
+    else:
+        print(f"{'KEY':<18} {'DATE':<16} {'DURATION':>8} {'LOCAL':<7} TITLE")
     for recording in selected:
         date = recording.date.strftime("%Y-%m-%d %H:%M") if recording.date else "-"
+        status = "trash" if recording.is_trashed else "active"
+        status_column = f"{status:<7} " if show_status else ""
         print(
             f"{_clean_line(recording.key):<18} {date:<16} "
             f"{_duration(recording.duration):>8} {_local_value(recordings_dir, recording):<7} "
-            f"{_clean_line(recording.title)}"
+            f"{status_column}{_clean_line(recording.title)}"
         )
 
 
@@ -150,7 +168,9 @@ def main(argv=None) -> int:
 
         try:
             with vmx_core.open_database(db_path) as conn:
-                recordings, warnings = vmx_core.load_recordings(conn)
+                recordings, warnings = vmx_core.load_recordings(
+                    conn, include_trashed=args.include_trash
+                )
         except Exception as exc:
             print(f"Cannot load Voice Memos database: {type(exc).__name__}: {exc}", file=sys.stderr)
             return 1
@@ -166,6 +186,7 @@ def main(argv=None) -> int:
                 recordings_dir,
                 args.json,
                 filtered=args.search is not None,
+                show_status=args.include_trash,
             )
             return 0
         if args.search is not None and not selected:
