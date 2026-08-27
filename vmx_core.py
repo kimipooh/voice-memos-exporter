@@ -328,6 +328,36 @@ def load_recordings(
     return recordings, warnings
 
 
+def filter_recordings(
+    recordings,
+    *,
+    search=None,
+    from_datetime: datetime | None = None,
+    to_datetime: datetime | None = None,
+) -> list[Recording]:
+    """Filter recordings by normalized title and inclusive local date bounds."""
+    needle = (
+        unicodedata.normalize("NFC", str(search)).casefold()
+        if search is not None
+        else None
+    )
+    filtered = []
+    for recording in recordings:
+        if needle is not None:
+            title = unicodedata.normalize("NFC", str(recording.title)).casefold()
+            if needle not in title:
+                continue
+        if from_datetime is not None or to_datetime is not None:
+            if recording.date is None:
+                continue
+            if from_datetime is not None and recording.date < from_datetime:
+                continue
+            if to_datetime is not None and recording.date > to_datetime:
+                continue
+        filtered.append(recording)
+    return filtered
+
+
 def _clean_stem(value):
     value = unicodedata.normalize("NFC", str(value))
     value = "".join(char for char in value if not (ord(char) < 32 or ord(char) == 127))

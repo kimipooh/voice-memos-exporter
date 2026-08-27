@@ -28,6 +28,7 @@ The upstream `1.0.2` tag is not recorded in the upstream changelog.
 
 ### Added
 
+- Added inclusive date-range filtering with `--from` and `--to`, including date-only whole-day handling, local-time comparison, and combinations with listing, search, trash inclusion, dry-run, and JSON output.
 - Added `Recording.is_trashed`, the `--include-trash` CLI option, list status display, and additive JSON `status` values.
 - Added `vmx_core.py` as the shared database and export layer for the CLI and GUI.
 - Added `export_voice_memos.py` with listing, JSON output, search, full export, dry-run, database override, timestamp control, and documented exit codes.

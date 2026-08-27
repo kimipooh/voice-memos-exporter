@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, time
 import json
 import os
+import re
 import sys
 import unicodedata
 
@@ -36,6 +38,25 @@ def _parser():
     parser.add_argument("--list", action="store_true", help="list recordings without exporting")
     parser.add_argument("--all", action="store_true", help="export all recordings")
     parser.add_argument("--search", metavar="TEXT", help="filter titles (case-insensitive)")
+    parser.add_argument(
+        "--from",
+        dest="from_date",
+        metavar="DATE",
+        help=(
+            "include recordings on or after DATE; accepted formats: YYYY-MM-DD, "
+            "YYYY-MM-DD HH:MM, or YYYY-MM-DD HH:MM:SS"
+        ),
+    )
+    parser.add_argument(
+        "--to",
+        dest="to_date",
+        metavar="DATE",
+        help=(
+            "include recordings on or before DATE; accepted formats: YYYY-MM-DD, "
+            "YYYY-MM-DD HH:MM, or YYYY-MM-DD HH:MM:SS; a date without a time "
+            "includes the entire day"
+        ),
+    )
     parser.add_argument("--output", "-o", metavar="DIR", help="export destination directory")
     parser.add_argument("--dry-run", action="store_true", help="show exports without writing files")
     parser.add_argument("--json", action="store_true", help="write --list output as JSON")
@@ -54,12 +75,24 @@ def _clean_line(value):
     return "".join(" " if unicodedata.category(char).startswith("C") else char for char in str(value))
 
 
-def _matches(recording, search):
-    if search is None:
-        return True
-    title = unicodedata.normalize("NFC", str(recording.title)).casefold()
-    needle = unicodedata.normalize("NFC", str(search)).casefold()
-    return needle in title
+def _parse_date_argument(value, option, *, end_of_day=False):
+    formats = (
+        (r"\d{4}-\d{2}-\d{2}", "%Y-%m-%d", True),
+        (r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", "%Y-%m-%d %H:%M", False),
+        (r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", "%Y-%m-%d %H:%M:%S", False),
+    )
+    for pattern, date_format, date_only in formats:
+        if re.fullmatch(pattern, value):
+            try:
+                parsed = datetime.strptime(value, date_format)
+            except ValueError:
+                break
+            if date_only and end_of_day:
+                return datetime.combine(parsed.date(), time.max)
+            return parsed
+    raise ValueError(
+        f"{option} must use YYYY-MM-DD, YYYY-MM-DD HH:MM, or YYYY-MM-DD HH:MM:SS"
+    )
 
 
 def _local_value(recordings_dir, recording):
@@ -160,6 +193,26 @@ def main(argv=None) -> int:
         if exporting and not args.output:
             parser.error("--output is required when exporting")
 
+        try:
+            from_datetime = (
+                _parse_date_argument(args.from_date, "--from")
+                if args.from_date is not None
+                else None
+            )
+            to_datetime = (
+                _parse_date_argument(args.to_date, "--to", end_of_day=True)
+                if args.to_date is not None
+                else None
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+        if (
+            from_datetime is not None
+            and to_datetime is not None
+            and from_datetime > to_datetime
+        ):
+            parser.error("--from must be earlier than or equal to --to")
+
         db_path = os.path.expanduser(args.db)
         diagnosis = vmx_core.diagnose_database(db_path)
         if diagnosis.status is not vmx_core.DbStatus.OK:
@@ -177,11 +230,19 @@ def main(argv=None) -> int:
         for warning in warnings:
             print(f"Warning: {warning}", file=sys.stderr)
 
-        selected = [recording for recording in recordings if _matches(recording, args.search)]
+        date_filtered = vmx_core.filter_recordings(
+            recordings,
+            from_datetime=from_datetime,
+            to_datetime=to_datetime,
+        )
+        selected = vmx_core.filter_recordings(
+            date_filtered,
+            search=args.search,
+        )
         recordings_dir = os.path.dirname(os.path.abspath(db_path))
         if args.list:
             _list_recordings(
-                recordings,
+                date_filtered,
                 selected,
                 recordings_dir,
                 args.json,

@@ -83,6 +83,16 @@ python3 export_voice_memos.py --search "Project" --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 ```
 
+2026年7月の録音だけを書き出す例:
+
+```bash
+python3 export_voice_memos.py \
+  --all \
+  --from 2026-07-01 \
+  --to 2026-07-31 \
+  --output ~/Desktop/voice-memos-export
+```
+
 `--list`、`--all`、`--search` の少なくとも1つが必要です。`--list --search TEXT` は一致した録音だけを一覧表示します。`--list` がなければ、`--all` または `--search` が書き出しを実行するため、`--output` が必要です。
 
 既定では「最近削除した項目」の録音を一覧、検索、dry-run、書き出しから除外します。含める場合は `--include-trash` を指定します。GUIでも既定で除外します。
@@ -93,6 +103,8 @@ python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 | `--list` | 書き出さずに録音を一覧表示します。 |
 | `--all` | 全録音を書き出します。 |
 | `--search TEXT` | Unicode正規化を行い、大文字小文字を区別しない部分一致でタイトルを絞り込みます。 |
+| `--from DATE` | `DATE` 以降（指定日時を含む）の録音に絞り込みます。形式は `YYYY-MM-DD`、`YYYY-MM-DD HH:MM`、`YYYY-MM-DD HH:MM:SS` です。 |
+| `--to DATE` | 同じ形式の `DATE` 以前（指定日時を含む）の録音に絞り込みます。時刻を省略するとその日全体を含みます。 |
 | `--output DIR`, `-o DIR` | 書き出し先ディレクトリです。 |
 | `--dry-run` | ソースと出力先を解決して結果を表示しますが、書き出しファイル、ログ、出力ディレクトリを作りません。 |
 | `--json` | `--list` の結果を1つのJSON配列として出力します。 |
@@ -100,6 +112,8 @@ python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
 | `--db PATH` | ボイスメモデータベースのパスを上書きします。 |
 | `--no-set-times` | 書き出したファイルの `mtime` と `atime` を設定しません。 |
 | `--version` | ツールのバージョンを表示して終了します。 |
+
+日付範囲の片側だけでも指定できます。`--all`、`--search`、`--include-trash`、`--list`、`--dry-run`、`--json` と組み合わせられ、タイトルと日付の条件はANDで適用されます。入力日時はローカル時刻として解釈し、CLIが `ZDATE` から生成して表示する `DATE` 列と同じ基準で比較します。
 
 終了コード:
 

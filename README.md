@@ -81,6 +81,11 @@ python3 export_voice_memos.py --list --search "Project"
 python3 export_voice_memos.py --all --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --search "Project" --output ~/Desktop/VoiceMemos
 python3 export_voice_memos.py --all --dry-run --output ~/Desktop/VoiceMemos
+python3 export_voice_memos.py \
+  --all \
+  --from 2026-07-01 \
+  --to 2026-07-31 \
+  --output ~/Desktop/voice-memos-export
 ```
 
 At least one of `--list`, `--all`, or `--search` is required. `--list --search TEXT` lists only matches; without `--list`, `--all` or `--search` performs an export and requires `--output`.
@@ -93,6 +98,8 @@ By default, recordings in Recently Deleted are excluded from listing, searching,
 | `--list` | List recordings without exporting. |
 | `--all` | Export all recordings. |
 | `--search TEXT` | Filter titles by case-insensitive substring, with Unicode normalization. |
+| `--from DATE` | Include recordings on or after `DATE`. Accepted formats are `YYYY-MM-DD`, `YYYY-MM-DD HH:MM`, and `YYYY-MM-DD HH:MM:SS`. |
+| `--to DATE` | Include recordings on or before `DATE`, using the same formats. A date without a time includes the entire day. |
 | `--output DIR`, `-o DIR` | Export destination directory. |
 | `--dry-run` | Resolve sources and destinations and show results without writing export files, logs, or the output directory. |
 | `--json` | Write `--list` output as one JSON array. |
@@ -100,6 +107,8 @@ By default, recordings in Recently Deleted are excluded from listing, searching,
 | `--db PATH` | Override the Voice Memos database path. |
 | `--no-set-times` | Do not set exported file `mtime` and `atime`. |
 | `--version` | Print the tool version and exit. |
+
+Date bounds are inclusive and may be specified independently. They combine with `--all`, `--search`, `--include-trash`, `--list`, `--dry-run`, and `--json`; title and date filters use AND logic. Input dates are interpreted in local time, matching the `DATE` column produced from `ZDATE` by the CLI.
 
 Exit codes:
 

@@ -1,4 +1,5 @@
 import contextlib
+from datetime import datetime
 import hashlib
 import io
 import json
@@ -10,6 +11,7 @@ import tempfile
 import unittest
 
 import export_voice_memos
+import vmx_core
 from tests.fixtures import create_audio, create_database
 
 
@@ -31,6 +33,10 @@ def active_and_trash_rows():
         *[row(index, f"Active {index}") for index in range(1, 6)],
         *[row(index, f"Trash {index}", eviction_date=800000000 + index) for index in range(6, 10)],
     ]
+
+
+def apple_date(value):
+    return value.timestamp() - vmx_core.APPLE_EPOCH_OFFSET
 
 
 def digest(path):
@@ -64,6 +70,10 @@ class CliTests(unittest.TestCase):
         self.assertIn("--list", result.stdout)
         self.assertIn("--dry-run", result.stdout)
         self.assertIn("--include-trash", result.stdout)
+        self.assertIn("--from DATE", result.stdout)
+        self.assertIn("--to DATE", result.stdout)
+        self.assertIn("YYYY-MM-DD HH:MM", result.stdout)
+        self.assertIn("includes the entire", result.stdout)
 
     def test_list_excludes_trash_by_default(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -346,6 +356,239 @@ class CliTests(unittest.TestCase):
             code, stdout, _ = self.invoke(["--list", "--db", db_path])
             self.assertEqual(code, 0)
             self.assertIn("Line one Line two", stdout)
+
+    def test_from_date_only_includes_same_day_and_later(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "Before", date=apple_date(datetime(2026, 7, 30, 23, 59))),
+                row(2, "At midnight", date=apple_date(datetime(2026, 7, 31, 0, 0))),
+                row(3, "Later", date=apple_date(datetime(2026, 8, 1, 9, 0))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                ["--list", "--from", "2026-07-31", "--db", db_path]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 2", stdout)
+            self.assertNotIn("Before", stdout)
+            self.assertIn("At midnight", stdout)
+            self.assertIn("Later", stdout)
+
+    def test_to_date_only_includes_entire_day(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "Late July", date=apple_date(datetime(2026, 7, 31, 23, 59, 59))),
+                row(2, "August", date=apple_date(datetime(2026, 8, 1, 0, 0))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                ["--list", "--to", "2026-07-31", "--db", db_path]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 1", stdout)
+            self.assertIn("Late July", stdout)
+            self.assertNotIn("August", stdout)
+
+    def test_from_and_to_select_only_range(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "June", date=apple_date(datetime(2026, 6, 30, 23, 59))),
+                row(2, "July", date=apple_date(datetime(2026, 7, 15, 12, 0))),
+                row(3, "August", date=apple_date(datetime(2026, 8, 1, 0, 0))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--from",
+                    "2026-07-01",
+                    "--to",
+                    "2026-07-31",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 1", stdout)
+            self.assertIn("July", stdout)
+            self.assertNotIn("June", stdout)
+            self.assertNotIn("August", stdout)
+
+    def test_datetime_formats_apply_exact_times(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "Too early", date=apple_date(datetime(2026, 7, 13, 11, 59, 59))),
+                row(2, "In range", date=apple_date(datetime(2026, 7, 13, 12, 0))),
+                row(3, "Too late", date=apple_date(datetime(2026, 7, 13, 16, 0, 1))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--from",
+                    "2026-07-13 12:00",
+                    "--to",
+                    "2026-07-13 16:00:00",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("In range", stdout)
+            self.assertNotIn("Too early", stdout)
+            self.assertNotIn("Too late", stdout)
+
+    def test_invalid_date_formats_are_fatal(self):
+        for option, value in (
+            ("--from", "2026/07/01"),
+            ("--from", "yesterday"),
+            ("--to", "2026-13-99"),
+        ):
+            with self.subTest(option=option, value=value):
+                code, _, stderr = self.invoke(["--list", option, value])
+                self.assertEqual(code, 1)
+                self.assertIn("must use YYYY-MM-DD", stderr)
+
+    def test_from_after_to_is_fatal(self):
+        code, _, stderr = self.invoke(
+            ["--list", "--from", "2026-08-01", "--to", "2026-07-01"]
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("--from must be earlier than or equal to --to", stderr)
+
+    def test_exact_from_and_to_boundaries_are_inclusive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            boundary = datetime(2026, 7, 13, 12, 0)
+            db_path = self.make_fixture(
+                directory, [row(1, "Boundary", date=apple_date(boundary))]
+            )
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--from",
+                    "2026-07-13 12:00",
+                    "--to",
+                    "2026-07-13 12:00",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 1", stdout)
+            self.assertIn("Boundary", stdout)
+
+    def test_search_and_date_filters_are_combined(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "Chiang Mai July", date=apple_date(datetime(2026, 7, 10))),
+                row(2, "Other July", date=apple_date(datetime(2026, 7, 11))),
+                row(3, "Chiang Mai August", date=apple_date(datetime(2026, 8, 10))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--search",
+                    "chiang mai",
+                    "--from",
+                    "2026-07-01",
+                    "--to",
+                    "2026-07-31",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 2 (matched: 1)", stdout)
+            self.assertIn("Chiang Mai July", stdout)
+            self.assertNotIn("Other July", stdout)
+            self.assertNotIn("Chiang Mai August", stdout)
+
+    def test_include_trash_and_date_filters_are_combined(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "Active July", date=apple_date(datetime(2026, 7, 10))),
+                row(
+                    2,
+                    "Trash July",
+                    date=apple_date(datetime(2026, 7, 11)),
+                    eviction_date=1,
+                ),
+                row(
+                    3,
+                    "Trash August",
+                    date=apple_date(datetime(2026, 8, 11)),
+                    eviction_date=1,
+                ),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--include-trash",
+                    "--from",
+                    "2026-07-01",
+                    "--to",
+                    "2026-07-31",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total recordings: 2", stdout)
+            self.assertIn("Active July", stdout)
+            self.assertIn("Trash July", stdout)
+            self.assertNotIn("Trash August", stdout)
+
+    def test_dry_run_with_date_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "July", date=apple_date(datetime(2026, 7, 10))),
+                row(2, "August", date=apple_date(datetime(2026, 8, 10))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            output = os.path.join(directory, "output")
+            code, stdout, _ = self.invoke(
+                [
+                    "--all",
+                    "--dry-run",
+                    "--from",
+                    "2026-07-01",
+                    "--to",
+                    "2026-07-31",
+                    "--output",
+                    output,
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertIn("Total:    1", stdout)
+            self.assertIn("July", stdout)
+            self.assertNotIn("August", stdout)
+            self.assertFalse(os.path.exists(output))
+
+    def test_json_contains_only_date_filtered_recordings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rows = [
+                row(1, "July", date=apple_date(datetime(2026, 7, 10))),
+                row(2, "August", date=apple_date(datetime(2026, 8, 10))),
+            ]
+            db_path = self.make_fixture(directory, rows)
+            code, stdout, _ = self.invoke(
+                [
+                    "--list",
+                    "--json",
+                    "--from",
+                    "2026-07-01",
+                    "--to",
+                    "2026-07-31",
+                    "--db",
+                    db_path,
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual([item["title"] for item in json.loads(stdout)], ["July"])
 
 
 if __name__ == "__main__":
