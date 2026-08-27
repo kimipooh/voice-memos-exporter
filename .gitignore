@@ -28,3 +28,6 @@ dist/
 # Local development agent files
 .claude/
 .codex/
+
+# Local-only documentation (historical audit / investigation notes)
+docs/audit/

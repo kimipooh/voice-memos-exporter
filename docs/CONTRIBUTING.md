@@ -28,4 +28,4 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 5. Run the tests: `python3 -m unittest discover -s tests -v`
 
 ## License
-The upstream repository has no formal `LICENSE` file, so its licensing terms are currently unclear. Do not assume that this repository is MIT licensed; see the root README and `docs/audit/` for the recorded findings.
+The upstream repository has no formal `LICENSE` file, so its licensing terms are currently unclear. Do not assume that this repository is MIT licensed; see the root README for details.
