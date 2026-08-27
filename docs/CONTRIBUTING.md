@@ -24,8 +24,8 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 3. Activate virtual environment: 
    - Windows: `venv\Scripts\activate`
    - Unix/MacOS: `source venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run the application: `python src/main.py`
+4. Run the CLI: `python3 export_voice_memos.py --help`
+5. Run the tests: `python3 -m unittest discover -s tests -v`
 
 ## License
-By contributing, you agree that your contributions will be licensed under its MIT License.
+The upstream repository has no formal `LICENSE` file, so its licensing terms are currently unclear. Do not assume that this repository is MIT licensed; see the root README for details.
