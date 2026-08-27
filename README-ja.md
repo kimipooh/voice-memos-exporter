@@ -96,3 +96,11 @@ Original work © rudrakabir — https://github.com/rudrakabir/voice-memos-export
 
 元プロジェクトが役立った場合は、原作者への支援をご検討ください。<br>
 ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/rudrakabir)
+
+## 著作権表示
+
+本forkで追加・変更したコード:
+
+Copyright © 2026 Kimiya Kitani
+
+詳細は [NOTICE](NOTICE) を参照してください。

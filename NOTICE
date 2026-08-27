@@ -1,0 +1,23 @@
+voice-memos-exporter fork
+
+Original project:
+rudrakabir/voice-memos-exporter
+https://github.com/rudrakabir/voice-memos-exporter
+Author: rudrakabir
+
+Fork modifications and newly written code:
+Copyright © 2026 Kimiya Kitani
+
+This repository is derived from rudrakabir/voice-memos-exporter.
+
+The upstream repository does not currently include a clear LICENSE file.
+Accordingly, this notice does not attempt to relicense upstream-derived code,
+and it is not itself an open-source license grant.
+
+The copyright notice above applies only to the modifications and newly
+written code contributed to this fork by Kimiya Kitani. It does not extend
+to code carried over from the upstream project, and it does not assert sole
+authorship of the repository as a whole.
+
+See README.md / README-ja.md and docs/design.md / docs/design-ja.md for
+further background on the upstream licensing situation.

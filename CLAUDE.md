@@ -241,6 +241,10 @@ MIT licensed と断定しない
 
 ライセンスに関する記述は慎重に維持する。
 
+upstreamのライセンス状態が明確になるか、ユーザーが明示的に決定するまで、
+OSS LICENSE や SPDX identifier を追加しない。
+`NOTICE` にある fork 追加・変更部分の著作権表示は、この方針を変更するものではない。
+
 ---
 
 ## README / docs 編集ルール

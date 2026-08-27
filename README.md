@@ -1,6 +1,6 @@
 # Voice Memos Exporter
 
-[日本語版: README-ja.md](README-ja.md)
+[Japanese: README-ja.md](README-ja.md)
 
 This is a development fork of [rudrakabir/voice-memos-exporter](https://github.com/rudrakabir/voice-memos-exporter), created by [rudrakabir](https://github.com/rudrakabir). The original project made it possible to bulk export macOS Voice Memos, and this fork is grateful to the original author for that useful work. This fork focuses on reliable bulk export of macOS Voice Memos through a Python command-line interface.
 
@@ -96,3 +96,11 @@ Original work © rudrakabir — https://github.com/rudrakabir/voice-memos-export
 
 If the original project is useful to you, consider supporting its author:<br>
 ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/rudrakabir)
+
+## Copyright
+
+Fork modifications and newly written code:
+
+Copyright © 2026 Kimiya Kitani
+
+See [NOTICE](NOTICE) for details.

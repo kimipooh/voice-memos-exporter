@@ -71,6 +71,8 @@ Recordings observed on a real Voice Memos database used a `.qta` extension and a
 
 The upstream project has no `LICENSE` file, and GitHub reports no license for it. The only reference is in `docs/CONTRIBUTING.md`, which states that contributions are licensed "under its MIT License" — but no MIT license text exists in the repository. The upstream repository does not currently provide a clear LICENSE file, so this fork does not make an independent license claim and is not published as an independent release or binary distribution.
 
+This fork includes a copyright notice (see [NOTICE](../NOTICE)) for modifications and newly written code by Kimiya Kitani. This does not relicense upstream-derived code and is not itself a license grant.
+
 ## Known limitations
 
 - The upstream license is unresolved, so this fork has no Release or binary distribution.

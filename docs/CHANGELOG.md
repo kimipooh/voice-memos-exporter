@@ -57,6 +57,7 @@ Entries below that mention the GUI or app packaging record work completed before
 - Simplified `README.md` and `README-ja.md` into a short entry point (features, requirements, quick start, common examples, main options, notes/limitations, documentation links) and moved detailed CLI reference and internal design notes to new `docs/usage.md` / `docs/usage-ja.md` and `docs/design.md` / `docs/design-ja.md`.
 - Removed `docs/audit/` from Git tracking (kept locally, added to `.gitignore`) and removed public links to it from `README.md`, `README-ja.md`, `docs/design.md`, `docs/design-ja.md`, and `docs/CONTRIBUTING.md`; license wording was rephrased to avoid depending on it.
 - Standardized `README-ja.md`, `docs/usage-ja.md`, and `docs/design-ja.md` on Japanese prose for headings and explanations, keeping CLI options, code identifiers, and literal CLI output in their original form.
+- Added a `NOTICE` file and a short Copyright section in `README.md` / `README-ja.md` recording a copyright notice for fork modifications and newly written code by Kimiya Kitani; this does not add or claim an OSS license.
 
 ## [1.0.1] - 2024-12-17
 
