@@ -25,7 +25,8 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
    - Windows: `venv\Scripts\activate`
    - Unix/MacOS: `source venv/bin/activate`
 4. Install dependencies: `pip install -r requirements.txt`
-5. Run the application: `python src/main.py`
+5. Run the application: `python3 voice_memos_exporter.py`
+6. Run the tests: `python3 -m unittest discover -s tests -v`
 
 ## License
 By contributing, you agree that your contributions will be licensed under its MIT License.
