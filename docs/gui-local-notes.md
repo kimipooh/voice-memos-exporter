@@ -24,6 +24,12 @@ Grant Full Disk Access to the terminal application that runs Python, not to a
 
 For local `.app` packaging, see [gui-local-packaging.md](gui-local-packaging.md).
 
+## Attribution
+
+The About dialog shows the upstream project and the fork modifications
+separately. The packaged app carries the same attribution string in the
+`Info.plist` `NSHumanReadableCopyright` field.
+
 ## Manual test checklist
 
 The automated tests cover the view model and the export call, but never touch a

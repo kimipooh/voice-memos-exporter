@@ -47,6 +47,10 @@ from vmx_core import (
     write_log,
 )
 
+APP_NAME = "Voice Memos Exporter"
+APP_VERSION = "1.0.0"
+UPSTREAM_PROJECT = "rudrakabir/voice-memos-exporter"
+APP_COPYRIGHT = "Original work © rudrakabir; fork modifications © 2026 Kimiya Kitani"
 COLUMNS = ("title", "date", "duration", "local", "status", "checked")
 CHECK_COLUMN = f"#{COLUMNS.index('checked') + 1}"
 LOCAL_LABELS = {
@@ -100,6 +104,26 @@ def local_label(state):
     return LOCAL_LABELS.get(state, "?")
 
 
+def about_text():
+    """Attribution text for the About dialog."""
+    return "\n".join(
+        [
+            APP_NAME,
+            f"Version {APP_VERSION}",
+            "",
+            "Original project:",
+            UPSTREAM_PROJECT,
+            "Original work © rudrakabir",
+            "",
+            "Fork modifications:",
+            "© 2026 Kimiya Kitani",
+            "",
+            "For local use only.",
+            "Not for redistribution.",
+        ]
+    )
+
+
 def status_label(recording):
     return "Recently Deleted" if recording.is_trashed else "Active"
 
@@ -108,6 +132,10 @@ class VoiceMemosExporter:
     def __init__(self, root):
         self.root = root
         self.root.title("Voice Memos Exporter")
+        try:
+            self.root.createcommand("tkAboutDialog", self.show_about_dialog)
+        except tk.TclError:
+            pass
         self.root.geometry("1000x600")
         self.root.minsize(800, 400)
         self.db_path = DEFAULT_DB_PATH
@@ -126,6 +154,9 @@ class VoiceMemosExporter:
         self.create_widgets()
         self.search_var.trace_add("write", self.filter_recordings)
         self.load_recordings()
+
+    def show_about_dialog(self):
+        messagebox.showinfo(f"About {APP_NAME}", about_text(), parent=self.root)
 
     def open_security_preferences(self):
         try:

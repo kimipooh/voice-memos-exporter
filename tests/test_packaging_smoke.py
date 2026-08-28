@@ -6,7 +6,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from voice_memos_exporter import full_disk_access_steps
+from voice_memos_exporter import APP_COPYRIGHT, full_disk_access_steps
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +24,17 @@ class FullDiskAccessStepsTests(unittest.TestCase):
         self.assertIn("Voice Memos Exporter.app", packaged)
         self.assertNotIn("terminal application", packaged.lower())
         self.assertIn("terminal application", script.lower())
+
+
+class PackagingMetadataTests(unittest.TestCase):
+    def test_spec_contains_attribution_identifier_and_version(self):
+        spec = (REPO_ROOT / "packaging" / "voice_memos_exporter.spec").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(APP_COPYRIGHT, spec)
+        self.assertIn("jp.kitani.voicememosexporter.local", spec)
+        self.assertIn("1.0.0", spec)
 
 
 @unittest.skipUnless(APP.exists(), "packaged .app not built")
@@ -51,6 +62,9 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertEqual(
             info["CFBundleIdentifier"], "jp.kitani.voicememosexporter.local"
         )
+        self.assertEqual(info["NSHumanReadableCopyright"], APP_COPYRIGHT)
+        self.assertEqual(info["CFBundleShortVersionString"], "1.0.0")
+        self.assertEqual(info["CFBundleVersion"], "1.0.0")
 
     def test_bundled_tcl_tk_libraries_exist(self):
         self.assertTrue(list(FRAMEWORKS.glob("libtcl9*.dylib")))

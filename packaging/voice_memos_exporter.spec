@@ -58,6 +58,7 @@ app = BUNDLE(
         "CFBundleDisplayName": "Voice Memos Exporter",
         "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1.0.0",
+        "NSHumanReadableCopyright": "Original work © rudrakabir; fork modifications © 2026 Kimiya Kitani",
         "NSHighResolutionCapable": True,
         "LSApplicationCategoryType": "public.app-category.utilities",
     },

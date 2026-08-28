@@ -35,6 +35,20 @@ class LabelTests(unittest.TestCase):
         )
 
 
+@unittest.skipIf(voice_memos_exporter is None, "GUI module unavailable")
+class AboutTextTests(unittest.TestCase):
+    def test_about_text_has_attribution_and_local_use_terms(self):
+        text = voice_memos_exporter.about_text()
+
+        self.assertIn("rudrakabir", text)
+        self.assertIn("Kimiya Kitani", text)
+        self.assertIn("Version 1.0.0", text)
+        self.assertIn("Not for redistribution.", text)
+        for license_name in ("MIT", "GPL", "Apache"):
+            self.assertNotIn(license_name, text)
+        self.assertLess(text.index("rudrakabir"), text.index("Kimiya Kitani"))
+
+
 @unittest.skipIf(tk is None, "Tk GUI unavailable")
 class GuiViewTests(unittest.TestCase):
     def setUp(self):
