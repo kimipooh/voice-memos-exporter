@@ -30,11 +30,26 @@ The About dialog shows the upstream project and the fork modifications
 separately. The packaged app carries the same attribution string in the
 `Info.plist` `NSHumanReadableCopyright` field.
 
+The About entry is registered by `create_menubar()` as an explicit item in the
+special `.apple` application menu. Tk adds its own About item only to its hidden
+default application menu, so an explicit `.apple` menu replaces that item
+instead of duplicating it. The `tkAboutDialog` hook stays registered as a
+secondary path, because Tk consults it only from that hidden default menu and
+therefore cannot be relied on by itself.
+
 ## Manual test checklist
 
 The automated tests cover the view model and the export call, but never touch a
 real Voice Memos database. Run this checklist by hand against a real library
 before treating a GUI change as done.
+
+About
+
+- [ ] The application menu shows exactly one "About Voice Memos Exporter"
+      entry, and it opens the attribution dialog (app name, version, upstream
+      project, fork modifications, local-use-only note).
+- [ ] The test is run against the freshly built bundle, not an older copy left
+      in `/Applications`.
 
 Full Disk Access
 

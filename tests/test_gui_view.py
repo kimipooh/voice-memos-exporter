@@ -92,6 +92,47 @@ class GuiViewTests(unittest.TestCase):
             ],
         )
 
+    def test_application_menu_has_exactly_one_about_entry(self):
+        app = self.create_app()
+
+        self.assertIsNotNone(app.app_menu)
+        self.assertEqual(str(self.root.cget("menu")), str(app.menubar))
+        self.assertEqual(app.app_menu.winfo_name(), "apple")
+        labels = [
+            app.app_menu.entrycget(index, "label")
+            for index in range(app.app_menu.index("end") + 1)
+            if app.app_menu.type(index) != "separator"
+        ]
+        self.assertEqual(
+            [label for label in labels if "About" in label],
+            [f"About {voice_memos_exporter.APP_NAME}"],
+        )
+
+    def test_about_menu_entry_shows_attribution_dialog(self):
+        app = self.create_app()
+
+        with mock.patch("voice_memos_exporter.messagebox.showinfo") as showinfo:
+            app.app_menu.invoke(0)
+
+        showinfo.assert_called_once()
+        title, message = showinfo.call_args.args
+        self.assertEqual(title, f"About {voice_memos_exporter.APP_NAME}")
+        self.assertEqual(message, voice_memos_exporter.about_text())
+
+    def test_tk_about_hook_remains_registered_as_fallback(self):
+        self.create_app()
+
+        self.assertEqual(
+            self.root.tk.eval("info commands tkAboutDialog"), "tkAboutDialog"
+        )
+        with mock.patch("voice_memos_exporter.messagebox.showinfo") as showinfo:
+            self.root.tk.eval("tkAboutDialog")
+
+        showinfo.assert_called_once()
+        self.assertEqual(
+            showinfo.call_args.args[1], voice_memos_exporter.about_text()
+        )
+
     def test_check_column_and_toggle_use_last_column(self):
         app = self.create_app()
         recording = Recording("pk:1", 1, None, "one.m4a", "One", None, 1)

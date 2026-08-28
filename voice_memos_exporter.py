@@ -132,10 +132,9 @@ class VoiceMemosExporter:
     def __init__(self, root):
         self.root = root
         self.root.title("Voice Memos Exporter")
-        try:
-            self.root.createcommand("tkAboutDialog", self.show_about_dialog)
-        except tk.TclError:
-            pass
+        self.menubar = None
+        self.app_menu = None
+        self.create_menubar()
         self.root.geometry("1000x600")
         self.root.minsize(800, 400)
         self.db_path = DEFAULT_DB_PATH
@@ -154,6 +153,37 @@ class VoiceMemosExporter:
         self.create_widgets()
         self.search_var.trace_add("write", self.filter_recordings)
         self.load_recordings()
+
+    def create_menubar(self):
+        """Register an explicit macOS application menu with an About entry.
+
+        Tk only consults the ``tkAboutDialog`` hook from the About item of its
+        own hidden default application menu, so that hook alone is not a
+        reliable way to reach this fork's attribution text. A menubar whose
+        first cascade is the special ``.apple`` menu replaces that hidden menu:
+        Tk keeps its standard Preferences / Services / Hide / Quit items but not
+        its own About item, so the About entry added here is the only one.
+
+        The ``tkAboutDialog`` hook stays registered as a secondary path (it adds
+        no menu entry of its own), so any About action that Tk still routes
+        through the standard about panel shows the same dialog.
+        """
+        try:
+            aqua = self.root.tk.call("tk", "windowingsystem") == "aqua"
+        except tk.TclError:
+            aqua = False
+        if aqua:
+            self.menubar = tk.Menu(self.root)
+            self.app_menu = tk.Menu(self.menubar, name="apple")
+            self.menubar.add_cascade(menu=self.app_menu)
+            self.app_menu.add_command(
+                label=f"About {APP_NAME}", command=self.show_about_dialog
+            )
+            self.root.configure(menu=self.menubar)
+        try:
+            self.root.createcommand("tkAboutDialog", self.show_about_dialog)
+        except tk.TclError:
+            pass
 
     def show_about_dialog(self):
         messagebox.showinfo(f"About {APP_NAME}", about_text(), parent=self.root)
