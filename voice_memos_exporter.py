@@ -17,20 +17,48 @@ import os
 import queue
 import subprocess
 import threading
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+
+try:
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk
+except ModuleNotFoundError as exc:
+    if exc.name not in {"tkinter", "_tkinter"}:
+        raise
+    tk = None
+    filedialog = messagebox = ttk = None
+    _TK_IMPORT_ERROR = exc
+else:
+    _TK_IMPORT_ERROR = None
 
 from vmx_core import (
     DEFAULT_DB_PATH,
     DbStatus,
+    SourceState,
     diagnose_database,
     export_recordings,
     filter_recordings as core_filter_recordings,
     format_duration,
     load_recordings,
     open_database,
+    resolve_source,
     write_log,
 )
+
+COLUMNS = ("title", "date", "duration", "local", "status", "checked")
+CHECK_COLUMN = f"#{COLUMNS.index('checked') + 1}"
+LOCAL_LABELS = {
+    SourceState.AVAILABLE: "Yes",
+    SourceState.NOT_DOWNLOADED: "iCloud",
+    SourceState.MISSING: "Missing",
+}
+
+
+def local_label(state):
+    return LOCAL_LABELS.get(state, "?")
+
+
+def status_label(recording):
+    return "Recently Deleted" if recording.is_trashed else "Active"
 
 
 class VoiceMemosExporter:
@@ -42,12 +70,16 @@ class VoiceMemosExporter:
         self.db_path = DEFAULT_DB_PATH
         self.recordings_path = os.path.dirname(self.db_path)
         self.recordings = {}
+        self.source_states = {}
         self.selected_keys = set()
         self.row_keys = {}
         self.visible_keys = []
         self.db_diagnosis = None
         self._export_running = False
         self.search_var = tk.StringVar()
+        self.include_deleted_var = tk.BooleanVar(value=False)
+        self.dry_run_var = tk.BooleanVar(value=False)
+        self.status_var = tk.StringVar(value="")
         self.create_widgets()
         self.search_var.trace_add("write", self.filter_recordings)
         self.load_recordings()
@@ -73,17 +105,23 @@ class VoiceMemosExporter:
         ttk.Label(
             main_frame, text="Full Disk Access Required", font=("TkDefaultFont", 14, "bold")
         ).pack(pady=5)
+        ttk.Label(
+            main_frame,
+            text=(
+                "This tool only reads the Voice Memos database and never modifies it."
+            ),
+            wraplength=400,
+        ).pack(pady=5)
         instructions = ttk.Frame(main_frame)
         instructions.pack(fill=tk.BOTH, expand=True, pady=10)
         steps = [
-            "1. Click 'Open Security Settings' below",
-            "2. Click the lock 🔒 icon to make changes",
-            "3. Click + to add an application",
-            "4. Navigate to and select 'Voice Memos Exporter'",
-            "   (the current application you're using)",
-            "5. Select the application and click Open",
-            "6. Ensure the checkbox next to the application is selected",
-            "7. Restart this application",
+            '1. Click "Open Security Settings" below.',
+            "2. Go to Privacy & Security > Full Disk Access.",
+            "3. Click + and add the terminal application you used to start this tool",
+            "   (for example Terminal.app or iTerm.app).",
+            "4. Make sure its checkbox is turned on.",
+            "5. Quit and reopen that terminal application.",
+            "6. Run this tool again: python3 voice_memos_exporter.py",
         ]
         for step in steps:
             ttk.Label(instructions, text=step, wraplength=400).pack(anchor="w", pady=2)
@@ -111,17 +149,30 @@ class VoiceMemosExporter:
         ttk.Entry(search_frame, textvariable=self.search_var).pack(
             side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0)
         )
+        ttk.Checkbutton(
+            search_frame,
+            text="Include Recently Deleted",
+            variable=self.include_deleted_var,
+            command=self.load_recordings,
+        ).pack(side=tk.LEFT, padx=(10, 0))
+        ttk.Button(search_frame, text="Reload", command=self.load_recordings).pack(
+            side=tk.LEFT, padx=(5, 0)
+        )
         self.tree = ttk.Treeview(
-            main_frame, columns=("title", "date", "duration", "checked"), show="headings"
+            main_frame, columns=COLUMNS, show="headings"
         )
         self.tree.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.tree.heading("title", text="Title")
         self.tree.heading("date", text="Date")
         self.tree.heading("duration", text="Duration")
+        self.tree.heading("local", text="Local")
+        self.tree.heading("status", text="Status")
         self.tree.heading("checked", text="Select ☐")
         self.tree.column("title", width=300)
-        self.tree.column("date", width=200)
-        self.tree.column("duration", width=100)
+        self.tree.column("date", width=150)
+        self.tree.column("duration", width=80)
+        self.tree.column("local", width=80, anchor="center")
+        self.tree.column("status", width=130, anchor="center")
         self.tree.column("checked", width=80, anchor="center")
         ttk.Style().configure("Treeview", rowheight=25)
         scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.tree.yview)
@@ -140,8 +191,15 @@ class VoiceMemosExporter:
         ttk.Label(left_frame, text="Click checkbox column to select individual items").pack(
             side=tk.LEFT, padx=10
         )
-        ttk.Button(button_frame, text="Export Selected", command=self.export_selected).pack(
-            side=tk.RIGHT, padx=5
+        self.export_button = ttk.Button(
+            button_frame, text="Export Selected", command=self.export_selected
+        )
+        self.export_button.pack(side=tk.RIGHT, padx=5)
+        ttk.Checkbutton(button_frame, text="Dry run", variable=self.dry_run_var).pack(
+            side=tk.RIGHT
+        )
+        ttk.Label(main_frame, textvariable=self.status_var).grid(
+            row=3, column=0, columnspan=2, sticky=tk.W, pady=(8, 0)
         )
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(1, weight=1)
@@ -166,7 +224,14 @@ class VoiceMemosExporter:
             iid = self.tree.insert(
                 "",
                 "end",
-                values=(title, date_text, duration_text, "☑" if key in self.selected_keys else "☐"),
+                values=(
+                    title,
+                    date_text,
+                    duration_text,
+                    local_label(self.source_states.get(key)),
+                    status_label(recording),
+                    "☑" if key in self.selected_keys else "☐",
+                ),
             )
             self.row_keys[iid] = key
 
@@ -181,9 +246,23 @@ class VoiceMemosExporter:
         self.db_diagnosis = diagnose_database(self.db_path)
         status = self.db_diagnosis.status
         if status is DbStatus.PERMISSION_DENIED:
+            self.recordings = {}
+            self.source_states = {}
+            self._render_keys([])
+            self._set_export_enabled(
+                False,
+                f"Database unavailable ({status.value}). Export is disabled.",
+            )
             self.show_permissions_dialog()
             return
         if status is not DbStatus.OK:
+            self.recordings = {}
+            self.source_states = {}
+            self._render_keys([])
+            self._set_export_enabled(
+                False,
+                f"Database unavailable ({status.value}). Export is disabled.",
+            )
             titles = {
                 DbStatus.MISSING: "Voice Memos Database Not Found",
                 DbStatus.SCHEMA_INCOMPATIBLE: "Unsupported Voice Memos Database Layout",
@@ -206,17 +285,39 @@ class VoiceMemosExporter:
             return
         try:
             with open_database(self.db_path) as conn:
-                recordings, warnings = load_recordings(conn)
+                recordings, warnings = load_recordings(
+                    conn, include_trashed=self.include_deleted_var.get()
+                )
             self.recordings = {recording.key: recording for recording in recordings}
+            self.source_states = {
+                recording.key: resolve_source(
+                    self.recordings_path, recording.rel_path
+                )[0]
+                for recording in self.recordings.values()
+            }
+            self.selected_keys &= set(self.recordings)
             self.filter_recordings()
+            self._set_export_enabled(
+                True, f"{len(self.recordings)} recordings loaded."
+            )
             if warnings:
                 messagebox.showwarning("Recordings Skipped", "\n".join(warnings))
         except Exception as exc:
+            self.recordings = {}
+            self.source_states = {}
+            self._render_keys([])
+            self._set_export_enabled(
+                False, "Database unavailable (unknown). Export is disabled."
+            )
             messagebox.showerror("Database Error", f"{type(exc).__name__}: {exc}")
+
+    def _set_export_enabled(self, enabled, message=""):
+        self.export_button.configure(state=(tk.NORMAL if enabled else tk.DISABLED))
+        self.status_var.set(message)
 
     def on_click(self, event):
         if self.tree.identify("region", event.x, event.y) == "cell":
-            if self.tree.identify_column(event.x) == "#4":
+            if self.tree.identify_column(event.x) == CHECK_COLUMN:
                 iid = self.tree.identify_row(event.y)
                 if iid:
                     self.toggle_item(iid)
@@ -259,6 +360,8 @@ class VoiceMemosExporter:
     def export_selected(self):
         if self._export_running:
             return
+        if self.db_diagnosis is None or self.db_diagnosis.status is not DbStatus.OK:
+            return
         targets = self.selected_recordings()
         if not targets:
             messagebox.showwarning("No Selection", "Please select at least one recording to export.")
@@ -266,10 +369,11 @@ class VoiceMemosExporter:
         export_dir = filedialog.askdirectory(title="Select Export Directory")
         if not export_dir:
             return
+        dry_run = self.dry_run_var.get()
         self._export_running = True
         try:
             progress_window = tk.Toplevel(self.root)
-            progress_window.title("Exporting...")
+            progress_window.title("Dry run..." if dry_run else "Exporting...")
             progress_window.geometry("420x180")
             progress_window.transient(self.root)
             progress_window.grab_set()
@@ -308,15 +412,12 @@ class VoiceMemosExporter:
 
         def worker():
             try:
-                summary = export_recordings(
+                summary = self._run_export(
                     targets,
                     export_dir,
-                    recordings_dir=self.recordings_path,
                     progress=progress,
                     cancel=cancel_event.is_set,
-                )
-                summary.log_path = write_log(
-                    export_dir, summary, db_diagnosis=self.db_diagnosis
+                    dry_run=dry_run,
                 )
                 events.put(("done", summary))
             except Exception as exc:
@@ -336,7 +437,8 @@ class VoiceMemosExporter:
                 elif event[0] == "done":
                     summary = event[1]
                     finish_progress()
-                    text = (
+                    text = "No files were copied (dry run).\n\n" if dry_run else ""
+                    text += (
                         f"Total:    {summary.total}\n"
                         f"Exported: {summary.exported}\n"
                         f"Skipped:  {summary.skipped}\n"
@@ -344,10 +446,13 @@ class VoiceMemosExporter:
                     )
                     if summary.log_path:
                         text += f"\n\nLog: {summary.log_path}"
+                    title_prefix = "Dry Run — " if dry_run else ""
                     if summary.failed > 0 or summary.skipped > 0:
-                        messagebox.showwarning("Export Partially Complete", text)
+                        messagebox.showwarning(
+                            f"{title_prefix}Export Partially Complete", text
+                        )
                     else:
-                        messagebox.showinfo("Export Complete", text)
+                        messagebox.showinfo(f"{title_prefix}Export Complete", text)
                     finished = True
                 elif event[0] == "error":
                     finish_progress()
@@ -359,8 +464,25 @@ class VoiceMemosExporter:
         threading.Thread(target=worker, daemon=True).start()
         self.root.after(100, poll)
 
+    def _run_export(self, targets, export_dir, *, progress, cancel, dry_run):
+        summary = export_recordings(
+            targets,
+            export_dir,
+            recordings_dir=self.recordings_path,
+            progress=progress,
+            cancel=cancel,
+            dry_run=dry_run,
+        )
+        if not dry_run:
+            summary.log_path = write_log(
+                export_dir, summary, db_diagnosis=self.db_diagnosis
+            )
+        return summary
+
 
 def main():
+    if _TK_IMPORT_ERROR is not None:
+        raise RuntimeError("Tkinter is required to run the GUI") from _TK_IMPORT_ERROR
     root = tk.Tk()
     VoiceMemosExporter(root)
     root.mainloop()
