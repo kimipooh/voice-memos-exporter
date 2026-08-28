@@ -105,12 +105,7 @@ def _local_value(recordings_dir, recording):
 
 
 def _duration(value):
-    if value is None:
-        return "-"
-    seconds = max(0, int(value))
-    if seconds >= 3600:
-        return f"{seconds // 3600}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
-    return f"{seconds // 60}:{seconds % 60:02d}"
+    return vmx_core.format_duration(value)
 
 
 def _list_recordings(

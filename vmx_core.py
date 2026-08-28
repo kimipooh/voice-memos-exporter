@@ -358,6 +358,16 @@ def filter_recordings(
     return filtered
 
 
+def format_duration(value) -> str:
+    """Format a duration in seconds as ``H:MM:SS`` or ``M:SS`` (``-`` if unknown)."""
+    if value is None:
+        return "-"
+    seconds = max(0, int(value))
+    if seconds >= 3600:
+        return f"{seconds // 3600}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+
 def _clean_stem(value):
     value = unicodedata.normalize("NFC", str(value))
     value = "".join(char for char in value if not (ord(char) < 32 or ord(char) == 127))
