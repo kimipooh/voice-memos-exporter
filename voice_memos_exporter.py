@@ -13,9 +13,11 @@ lives only on the local branch ``gui/local-app`` and is NOT for publication,
 redistribution, or release until that status is resolved.
 """
 
+import json
 import os
 import queue
 import subprocess
+import sys
 import threading
 
 try:
@@ -30,6 +32,7 @@ except ModuleNotFoundError as exc:
 else:
     _TK_IMPORT_ERROR = None
 
+import vmx_core
 from vmx_core import (
     DEFAULT_DB_PATH,
     DbStatus,
@@ -51,6 +54,46 @@ LOCAL_LABELS = {
     SourceState.NOT_DOWNLOADED: "iCloud",
     SourceState.MISSING: "Missing",
 }
+
+
+def _is_packaged_app():
+    """True when running from the PyInstaller-built .app bundle."""
+    return bool(getattr(sys, "frozen", False))
+
+
+def full_disk_access_steps(packaged):
+    if packaged:
+        return [
+            '1. Click "Open Security Settings" below.',
+            "2. Go to Privacy & Security > Full Disk Access.",
+            "3. Click + and add Voice Memos Exporter.app.",
+            "4. Make sure its checkbox is turned on.",
+            "5. Quit and reopen Voice Memos Exporter.app.",
+        ]
+    return [
+        '1. Click "Open Security Settings" below.',
+        "2. Go to Privacy & Security > Full Disk Access.",
+        "3. Click + and add the terminal application you used to start this tool",
+        "   (for example Terminal.app or iTerm.app).",
+        "4. Make sure its checkbox is turned on.",
+        "5. Quit and reopen that terminal application.",
+        "6. Run this tool again: python3 voice_memos_exporter.py",
+    ]
+
+
+def _emit_selftest():
+    payload = {
+        "frozen": bool(getattr(sys, "frozen", False)),
+        "executable": sys.executable,
+        "prefix": sys.prefix,
+        "meipass": getattr(sys, "_MEIPASS", None),
+        "tcl_version": str(tk.TclVersion) if tk is not None else None,
+        "tk_version": str(tk.TkVersion) if tk is not None else None,
+        "vmx_core_file": getattr(vmx_core, "__file__", None),
+        "vmx_core_ok": hasattr(vmx_core, "export_recordings"),
+    }
+    os.write(1, (json.dumps(payload) + "\n").encode("utf-8"))
+    return 0
 
 
 def local_label(state):
@@ -114,15 +157,7 @@ class VoiceMemosExporter:
         ).pack(pady=5)
         instructions = ttk.Frame(main_frame)
         instructions.pack(fill=tk.BOTH, expand=True, pady=10)
-        steps = [
-            '1. Click "Open Security Settings" below.',
-            "2. Go to Privacy & Security > Full Disk Access.",
-            "3. Click + and add the terminal application you used to start this tool",
-            "   (for example Terminal.app or iTerm.app).",
-            "4. Make sure its checkbox is turned on.",
-            "5. Quit and reopen that terminal application.",
-            "6. Run this tool again: python3 voice_memos_exporter.py",
-        ]
+        steps = full_disk_access_steps(_is_packaged_app())
         for step in steps:
             ttk.Label(instructions, text=step, wraplength=400).pack(anchor="w", pady=2)
         button_frame = ttk.Frame(main_frame)
@@ -481,6 +516,8 @@ class VoiceMemosExporter:
 
 
 def main():
+    if os.environ.get("VMX_APP_SELFTEST") == "1":
+        return _emit_selftest()
     if _TK_IMPORT_ERROR is not None:
         raise RuntimeError("Tkinter is required to run the GUI") from _TK_IMPORT_ERROR
     root = tk.Tk()

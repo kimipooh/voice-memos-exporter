@@ -22,6 +22,8 @@ python3 voice_memos_exporter.py
 Grant Full Disk Access to the terminal application that runs Python, not to a
 `.app` bundle.
 
+For local `.app` packaging, see [gui-local-packaging.md](gui-local-packaging.md).
+
 ## Manual test checklist
 
 The automated tests cover the view model and the export call, but never touch a
