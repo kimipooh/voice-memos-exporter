@@ -11,10 +11,11 @@ Voice Memos DB / files
         ↓
     vmx_core.py
         ↓
-export_voice_memos.py
+        ├── export_voice_memos.py（CLI）
+        └── voice_memos_exporter.py（Tkinter GUI / PyInstaller .app）
 ```
 
-`vmx_core.py` は信頼性の中心で、データベースの診断と読み込み、ソース解決、安全な出力先生成、書き出し、診断ログを担当します。`export_voice_memos.py` がその機能のコマンドラインインターフェースを提供します。これはこのforkで唯一保守しているインターフェースであり、GUIやアプリのパッケージングは保守していません。
+`vmx_core.py` は単一の書き出しエンジンであり、信頼性の中心としてデータベースの診断と読み込み、ソース解決、安全な出力先生成、書き出し、診断ログを担当します。2つのサポート対象フロントエンドがこのコアを呼び出します。`export_voice_memos.py` はCLIを、`voice_memos_exporter.py` はTkinter GUIを提供し、GUIはPyInstaller `.app` としても配布されます。GUIは `vmx_core` APIを直接呼び出し、CLIの標準出力を解析せず、CLIをshell経由で実行することもありません。
 
 ## このforkを作った理由
 
@@ -67,15 +68,13 @@ upstreamで配布された1.0.2バイナリは、後に追加された録音単�
 - データの流れは、データベースを読む、音声ファイルを読む、選択した出力先へコピーする、の3段階です。安全にWALを扱うため一時read-onlyスナップショットを使う場合があり、処理後に削除します。
 - 診断ログは選択した出力先だけに書き、タイトルとパスを含みますが音声は含まず、外部へ送信しません。
 
-## ライセンス調査
+## ライセンス
 
-upstreamリポジトリには `LICENSE` ファイルがなく、GitHubもライセンスを認識していません。唯一の言及は `docs/CONTRIBUTING.md` 内の、コントリビューションは “under its MIT License” でライセンスされるという記述だけですが、リポジトリにMITライセンスの本文は存在しません。そのため、このforkでは独自のライセンス表明を行っておらず、独立したReleaseまたはバイナリ配布物としても公開していません。
-
-本forkで追加・変更したコードについて、Kimiya Kitaniの著作権表示を行っています（[NOTICE](../NOTICE)参照）。これはupstream由来のコードを再ライセンスするものではなく、この表示自体もライセンス付与ではありません。
+upstreamの `rudrakabir/voice-memos-exporter` はMIT License（`Copyright (c) 2026 rudrakabir`）を公開しています。このforkも同じMIT Licenseを採用し、[LICENSE](../LICENSE) でupstreamの著作権表示を維持した上で、Kimiya Kitaniによるfork変更部分の著作権表示を追加しています。帰属の概要は [NOTICE](../NOTICE) を参照してください。
 
 ## 既知の制限
 
-- upstreamのライセンスが未解決のため、このforkにはReleaseもバイナリ配布もありません。
+- パッケージ済み `.app` はApple Silicon（arm64）専用です。Intel Macは非対応・未検証で、バンドルはnotarizeされていません。
 - Intel Macでのソース実行は未検証です。CLI/coreテストはApple Silicon上のPython 3.9.6で確認しています。
 - 読み込み処理は、Appleの非公開の内部ボイスメモDB schemaに依存します。将来のmacOS変更には追随が必要になる場合があります。
 - 書き出した録音は `.qta` を含むソースの拡張子を維持し、メディア変換を行いません。

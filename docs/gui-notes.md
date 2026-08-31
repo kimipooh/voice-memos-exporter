@@ -1,13 +1,10 @@
-# GUI local notes
+# GUI notes
 
-The Tkinter GUI, `voice_memos_exporter.py`, exists only on the local branch
-`gui/local-app`. It is not published, released, or distributed.
+The Tkinter GUI, `voice_memos_exporter.py`, is a supported front end shipped
+both as a script and as a packaged macOS app.
 
-Its UI structure is derived from `rudrakabir/voice-memos-exporter`. The database
-access and export logic were replaced by this fork's `vmx_core` module.
-
-The upstream license status is unresolved. Do not add a `LICENSE` file or SPDX
-identifier while that remains unresolved.
+Its UI structure is derived from `rudrakabir/voice-memos-exporter`, while its
+database access and export logic were replaced by this fork's `vmx_core` module.
 
 `vmx_core.py` is the single export engine. The GUI and the CLI,
 `export_voice_memos.py`, are two front ends over the same core API. The GUI does
@@ -22,7 +19,7 @@ python3 voice_memos_exporter.py
 Grant Full Disk Access to the terminal application that runs Python, not to a
 `.app` bundle.
 
-For local `.app` packaging, see [gui-local-packaging.md](gui-local-packaging.md).
+For `.app` packaging, see [gui-packaging.md](gui-packaging.md).
 
 ## Attribution
 
@@ -47,7 +44,7 @@ About
 
 - [ ] The application menu shows exactly one "About Voice Memos Exporter"
       entry, and it opens the attribution dialog (app name, version, upstream
-      project, fork modifications, local-use-only note).
+      project, fork modifications, MIT license line).
 - [ ] The test is run against the freshly built bundle, not an older copy left
       in `/Applications`.
 

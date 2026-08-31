@@ -1,7 +1,6 @@
-# GUI local packaging
+# GUI packaging
 
-This packaging workflow is local-only. Do not publish, redistribute, or release
-the resulting app. The upstream license status remains unresolved.
+This workflow builds the macOS Voice Memos Exporter app bundle with PyInstaller.
 
 The app is built for Apple Silicon with Homebrew Python 3.14.7 (arm64),
 Tcl/Tk 9.0, and PyInstaller 6.22.2. PyInstaller is installed in the
@@ -16,11 +15,11 @@ Set up the packaging environment with:
 Build the app with:
 
 ```bash
-bash packaging/build_local_app.sh
+bash packaging/build_app.sh
 ```
 
 The output is `dist/Voice Memos Exporter.app`, with bundle identifier
-`jp.kitani.voicememosexporter.local`.
+`jp.kitani.voicememosexporter`.
 
 Run the packaging smoke test as part of the full test suite after building:
 
@@ -33,5 +32,16 @@ another terminal application. Rebuilding changes the bundle's code-signing or
 inode identity, so macOS may require the app to be approved again in System
 Settings.
 
-`README.md`, `README-ja.md`, and `NOTICE` are intentionally unchanged by this
-packaging work.
+## Release asset
+
+Create the distributable zip with:
+
+```bash
+cd dist
+ditto -c -k --sequesterRsrc --keepParent \
+  "Voice Memos Exporter.app" \
+  "Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip"
+```
+
+Use `ditto`, not `zip`, so the bundle's symlinks and resource forks survive.
+The app is unsigned and not notarized.

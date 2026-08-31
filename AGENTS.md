@@ -10,15 +10,15 @@ Claude Code 向けの詳細版は `CLAUDE.md` にある。両者のルールは�
 macOS Voice Memos の DB と録音原本を読み取り、
 ユーザー指定の出力先へコピーするツール。
 
-この fork の主成果物は **Python CLI ツール**。
+この fork は、単一の書き出しエンジン `vmx_core.py` 上で、
+**Python CLI** と **macOS GUI** の両方を保守する。
 
 ```text
-vmx_core.py          共通ロジック（最優先）
-export_voice_memos.py  CLI
-tests/                 テスト
+vmx_core.py              共通ロジック（単一の書き出しエンジン）
+export_voice_memos.py    CLI
+voice_memos_exporter.py  macOS GUI（`.app` としてもパッケージ）
+tests/                   テスト
 ```
-
-このforkはPython CLI専用であり、GUIとmacOS app buildは保守しない。
 
 ---
 
@@ -29,11 +29,12 @@ Voice Memos DB
       ↓
   vmx_core.py
       ↓
-export_voice_memos.py
+├─ export_voice_memos.py    CLI
+└─ voice_memos_exporter.py GUI / packaged `.app`
 ```
 
 - 共通ロジックは `vmx_core.py` に置く。
-- 現行インターフェースはCLIだけとする。
+- CLIとGUIはどちらも `vmx_core.py` のAPIを直接使う。
 
 ---
 
@@ -47,9 +48,11 @@ upstream  https://github.com/rudrakabir/voice-memos-exporter.git
 作業 branch:
 
 ```text
-fix/export-reliability
+gui/local-app
 ```
 
+- `gui/local-app` はv1.1.0のGUI / app / license対応を保持し、ユーザーによる `main` への手動merge待ち。
+- `fix/export-reliability` は `v1.0.0` として `main` へmerge済み。
 - `main` を直接編集しない。
 - 新規修正も `feature/*` / `fix/*` の専用 branch で行う。
 
@@ -177,16 +180,12 @@ python3 export_voice_memos.py --help
 
 ## upstream license
 
-upstream に正式な `LICENSE` ファイルは存在しない。
+upstreamはMIT License（`Copyright (c) 2026 rudrakabir`）を公開している。
+このforkもMIT Licenseを採用し、`LICENSE` でupstreamの著作権表示を維持し、
+fork変更部分の著作権表示を追加する。
 
-```text
-LICENSE を新規作成しない
-MIT licensed と断定しない
-独自ライセンスを設定しない
-```
-
-upstreamのライセンス状態が明確になるか、ユーザーが明示的に決定するまでこの方針を維持する。
-`NOTICE` にある fork 追加・変更部分の著作権表示は、この方針を変更するものではない。
+- upstreamの著作権表示は絶対に削除しない。
+- 第三のライセンスを導入しない。
 
 ---
 
@@ -195,13 +194,13 @@ upstreamのライセンス状態が明確になるか、ユーザーが明示的
 - 既存構造を維持し、全面書き換えを避ける。
 - 変更した実装だけを文書へ反映する。
 - 未実装機能を「対応済み」と書かない。
-- GUIやapp buildを現行機能として説明しない。
-- `README.md` / `README-ja.md` / `docs/CHANGELOG.md` の整合性を確認する。
+- GUIとapp buildは現行のサポート機能として `README.md` / `README-ja.md` / `docs/` で一貫して説明する。
+- `README.md` / `README-ja.md` / `docs/CHANGELOG.md` / `LICENSE` / `NOTICE` / `docs/gui-notes.md` / `docs/gui-packaging.md` の整合性を確認する。
 - `AGENTS.md` / `CLAUDE.md` / `.codex/tasks/` 配下は UTF-8 BOM なしで保存する。
 
 ---
 
-## .claude / .codex are local-only
+## .claude / .codex are for local development
 
 `.claude/` と `.codex/` はローカル開発支援用。Git 管理対象にしない。
 

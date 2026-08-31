@@ -13,19 +13,19 @@ Codex など Claude 以外の実装エージェント向けの要約は `AGENTS.
 macOS Voice Memos の録音を、DB とオリジナル音声ファイルから読み取り、
 ユーザーが指定した出力先へコピーするツール。
 
-この fork の主成果物は **Python CLI ツール**である。
+この fork は、単一の書き出しエンジン `vmx_core.py` 上で、
+**Python CLI** と **macOS GUI** の両方を保守する。
 
 優先順位:
 
 ```text
 vmx_core.py
     ↓
-export_voice_memos.py
+├─ export_voice_memos.py    CLI
+└─ voice_memos_exporter.py GUI / packaged `.app`
     ↓
-tests
+  tests
 ```
-
-このforkはPython CLI専用であり、GUIとmacOS app buildは保守しない。
 
 ---
 
@@ -36,11 +36,12 @@ Voice Memos DB
       ↓
   vmx_core.py
       ↓
-export_voice_memos.py
+├─ export_voice_memos.py    CLI
+└─ voice_memos_exporter.py GUI / packaged `.app`
 ```
 
 - 共通ロジックは可能な限り `vmx_core.py` に置く。
-- 現行インターフェースはCLIだけとする。
+- CLIとGUIはどちらも `vmx_core.py` のAPIを直接使う。
 - 機能追加・バグ修正も、まず `vmx_core.py` への配置を検討する。
 
 ---
@@ -55,12 +56,13 @@ upstream  https://github.com/rudrakabir/voice-memos-exporter.git
 現在の作業 branch:
 
 ```text
-fix/export-reliability
+gui/local-app
 ```
 
+- `gui/local-app` はv1.1.0のGUI / app / license対応を保持し、ユーザーによる `main` への手動merge待ち。
+- `fix/export-reliability` は `v1.0.0` として `main` へmerge済み。
 - `main` を直接編集しない。
 - 新しい修正も原則として専用 branch (`feature/*` / `fix/*`) を使う。
-- `fix/export-reliability` は現時点では `main` へ merge せず維持する。
 
 ---
 
@@ -228,22 +230,12 @@ python3 export_voice_memos.py --help
 
 ## upstream license
 
-upstream repository には正式な `LICENSE` ファイルが存在しない。
-`docs/CONTRIBUTING.md` に MIT への言及があるが、正式ライセンスとは断定しない。
+upstreamはMIT License（`Copyright (c) 2026 rudrakabir`）を公開している。
+このforkもMIT Licenseを採用し、`LICENSE` でupstreamの著作権表示を維持し、
+fork変更部分の著作権表示を追加する。
 
-したがって:
-
-```text
-LICENSE を新規作成しない
-MIT licensed と断定しない
-独自ライセンスを設定しない
-```
-
-ライセンスに関する記述は慎重に維持する。
-
-upstreamのライセンス状態が明確になるか、ユーザーが明示的に決定するまで、
-OSS LICENSE や SPDX identifier を追加しない。
-`NOTICE` にある fork 追加・変更部分の著作権表示は、この方針を変更するものではない。
+- upstreamの著作権表示は絶対に削除しない。
+- 第三のライセンスを導入しない。
 
 ---
 
@@ -252,7 +244,7 @@ OSS LICENSE や SPDX identifier を追加しない。
 - 既存構造を維持する。全面書き換えを避ける。
 - 変更した実装だけを文書へ反映する。
 - 未実装機能を「対応済み」と書かない。
-- GUIやapp buildを現行機能として説明しない。
+- GUIとapp buildは現行のサポート機能として `README.md` / `README-ja.md` / `docs/` で一貫して説明する。
 
 以下を変更した場合は整合性を確認する。
 
@@ -260,6 +252,10 @@ OSS LICENSE や SPDX identifier を追加しない。
 README.md
 README-ja.md
 docs/CHANGELOG.md
+LICENSE
+NOTICE
+docs/gui-notes.md
+docs/gui-packaging.md
 docs/
 CLAUDE.md
 AGENTS.md

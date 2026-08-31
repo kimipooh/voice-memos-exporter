@@ -30,5 +30,5 @@ dist/
 .claude/
 .codex/
 
-# Local-only documentation (historical audit / investigation notes)
+# Historical audit / investigation notes (not published)
 docs/audit/

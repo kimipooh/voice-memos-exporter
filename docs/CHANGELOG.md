@@ -5,7 +5,50 @@ All notable changes to Voice Memos Exporter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - fork
+## [1.1.0] - 2026-08-31
+
+### Added
+
+- Restored the macOS Tkinter GUI as a supported front end, rebuilt on top of
+  `vmx_core` so the GUI and the CLI share one export engine.
+- Added a self-contained PyInstaller macOS app bundle
+  (`packaging/voice_memos_exporter.spec`, `packaging/build_app.sh`) with
+  bundled Python and Tcl/Tk, so app users need no Python, Homebrew, or Tk.
+- Added a `Local` column reporting whether each recording's audio is available
+  on disk, and a `Status` column distinguishing Active from Recently Deleted.
+- Added an "Include Recently Deleted" option to the GUI.
+- Added a GUI dry-run mode that reports counts without writing any file.
+- Added a background export worker with progress reporting and cancellation,
+  plus a Total / Exported / Skipped / Failed summary.
+- Added an About dialog with upstream and fork attribution, registered as an
+  explicit item in the macOS application menu.
+- Added app metadata: `CFBundleShortVersionString`, `CFBundleVersion`,
+  `CFBundleIdentifier`, and `NSHumanReadableCopyright`.
+- Added GUI view-model, selection, formatting, and packaging smoke tests.
+- Added `LICENSE` (MIT) and `tests/test_release_metadata.py` covering license,
+  attribution, and version consistency.
+
+### Changed
+
+- Adopted the MIT License now published by upstream, keeping the upstream
+  copyright line and adding a fork copyright line; rewrote `NOTICE`,
+  `README.md`, `README-ja.md`, `docs/design.md`, `docs/design-ja.md`, and
+  `docs/CONTRIBUTING.md` accordingly.
+- Removed the publication and redistribution restrictions from the GUI, the
+  packaging spec, the build script, and the documentation.
+- Full Disk Access guidance now distinguishes the packaged app (grant access to
+  `Voice Memos Exporter.app`) from script and CLI use (grant access to the
+  terminal application).
+- Unified `TOOL_VERSION`, the GUI `APP_VERSION`, and the app bundle version on
+  `1.1.0`; `APP_VERSION` now derives from `vmx_core.TOOL_VERSION`.
+- Changed the app bundle identifier to `jp.kitani.voicememosexporter`. Existing
+  local Full Disk Access grants for the former identifier must be re-approved.
+- Renamed the packaging build helper and the GUI notes and packaging documents
+  to their publication-ready names.
+
+## [1.0.0-fork] - 2026-08-27
+
+Released as fork tag `v1.0.0`. Upstream tags `1.0.0` / `1.0.1` below are the original project's history.
 
 The upstream `1.0.2` tag is not recorded in the upstream changelog.
 Entries below that mention the GUI or app packaging record work completed before the later CLI-only decision; the Removed section records their subsequent removal.
@@ -57,7 +100,7 @@ Entries below that mention the GUI or app packaging record work completed before
 - Simplified `README.md` and `README-ja.md` into a short entry point (features, requirements, quick start, common examples, main options, notes/limitations, documentation links) and moved detailed CLI reference and internal design notes to new `docs/usage.md` / `docs/usage-ja.md` and `docs/design.md` / `docs/design-ja.md`.
 - Removed `docs/audit/` from Git tracking (kept locally, added to `.gitignore`) and removed public links to it from `README.md`, `README-ja.md`, `docs/design.md`, `docs/design-ja.md`, and `docs/CONTRIBUTING.md`; license wording was rephrased to avoid depending on it.
 - Standardized `README-ja.md`, `docs/usage-ja.md`, and `docs/design-ja.md` on Japanese prose for headings and explanations, keeping CLI options, code identifiers, and literal CLI output in their original form.
-- Added a `NOTICE` file and a short Copyright section in `README.md` / `README-ja.md` recording a copyright notice for fork modifications and newly written code by Kimiya Kitani; this does not add or claim an OSS license.
+- Added a `NOTICE` file and a short Copyright section in `README.md` / `README-ja.md` recording a copyright notice for fork modifications and newly written code by Kimiya Kitani.
 
 ## [1.0.1] - 2024-12-17
 

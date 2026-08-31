@@ -11,10 +11,11 @@ Voice Memos DB / files
         ↓
     vmx_core.py
         ↓
-export_voice_memos.py
+        ├── export_voice_memos.py (CLI)
+        └── voice_memos_exporter.py (Tkinter GUI / PyInstaller .app)
 ```
 
-`vmx_core.py` is the reliability boundary: it diagnoses and reads the database, resolves sources, generates safe destinations, exports, and writes diagnostics. `export_voice_memos.py` provides the command-line interface over that behavior. This is also this fork's only supported interface; no GUI or app packaging is maintained.
+`vmx_core.py` is the single export engine and reliability boundary: it diagnoses and reads the database, resolves sources, generates safe destinations, exports, and writes diagnostics. Two supported front ends call that core: `export_voice_memos.py` provides the command-line interface, while `voice_memos_exporter.py` provides the Tkinter GUI and is also shipped as a PyInstaller `.app`. The GUI calls the `vmx_core` API directly; it never parses CLI stdout and never shells out to the CLI.
 
 ## Why this fork exists
 
@@ -67,15 +68,17 @@ Recordings observed on a real Voice Memos database used a `.qta` extension and a
 - Data flow: read the database, read an audio file, copy it to the selected destination. A temporary read snapshot may be used for safe WAL handling and is removed afterward.
 - Diagnostic logs are written only to the selected output directory, contain titles and paths but no audio, and are never sent externally.
 
-## License investigation
+## Licensing
 
-The upstream project has no `LICENSE` file, and GitHub reports no license for it. The only reference is in `docs/CONTRIBUTING.md`, which states that contributions are licensed "under its MIT License" — but no MIT license text exists in the repository. The upstream repository does not currently provide a clear LICENSE file, so this fork does not make an independent license claim and is not published as an independent release or binary distribution.
-
-This fork includes a copyright notice (see [NOTICE](../NOTICE)) for modifications and newly written code by Kimiya Kitani. This does not relicense upstream-derived code and is not itself a license grant.
+Upstream `rudrakabir/voice-memos-exporter` publishes an MIT License
+(`Copyright (c) 2026 rudrakabir`). This fork adopts the same MIT License and
+keeps the upstream copyright line in [LICENSE](../LICENSE), adding a second
+copyright line for the fork modifications by Kimiya Kitani. See
+[NOTICE](../NOTICE) for the attribution summary.
 
 ## Known limitations
 
-- The upstream license is unresolved, so this fork has no Release or binary distribution.
+- The packaged `.app` is built for Apple Silicon (arm64) only; Intel Macs are not supported or tested, and the bundle is not notarized.
 - Intel Mac source execution has not been tested; the CLI/core suite is verified with Python 3.9.6 on Apple Silicon.
 - The reader depends on Apple's undocumented internal Voice Memos database schema. Future macOS changes may require updates.
 - Exported recordings retain their source extension, including `.qta`; no media conversion is performed.
