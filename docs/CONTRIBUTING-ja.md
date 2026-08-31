@@ -28,7 +28,7 @@ Voice Memos Exporterへの協力を歓迎します。次のようなコントリ
 - 開発にはmacOSが必要です。
 - CLIはPython 3.9以降に対応します。
 - GUI・packaging検証にはPython 3.14.7とTcl/Tk 9.0を使います。
-- packagingではvirtual environment `.venv-package` を使います。`/opt/homebrew/bin/python3.14 -m venv .venv-package` で作成し、[gui-packaging-ja.md](gui-packaging-ja.md) の手順でPyInstallerをインストールします。
+- packagingでは外部のvirtual environment `~/.venvs/voice-memos-exporter/package` をデフォルトで使います。`/opt/homebrew/bin/python3.14 -m venv "$HOME/.venvs/voice-memos-exporter/package"` で作成し、[gui-packaging-ja.md](gui-packaging-ja.md) の手順でPyInstallerをインストールします。`build_app.sh` に異なるpackaging用virtual environmentを使わせる場合だけ、`VMX_PACKAGE_VENV`を設定します。設定とbuild方法は[gui-packaging-ja.md](gui-packaging-ja.md)を参照してください。
 
 ## テストの実行
 

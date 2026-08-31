@@ -7,10 +7,11 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(dirname -- "$SCRIPT_DIR")
 cd "$REPO_ROOT"
 
-PYINSTALLER="$REPO_ROOT/.venv-package/bin/pyinstaller"
+PACKAGE_VENV="${VMX_PACKAGE_VENV:-$HOME/.venvs/voice-memos-exporter/package}"
+PYINSTALLER="$PACKAGE_VENV/bin/pyinstaller"
 if [ ! -x "$PYINSTALLER" ]; then
-    echo "error: .venv-package/bin/pyinstaller is missing or not executable" >&2
-    echo "run: /opt/homebrew/bin/python3.14 -m venv .venv-package && .venv-package/bin/python -m pip install pyinstaller" >&2
+    echo "error: $PYINSTALLER is missing or not executable" >&2
+    echo "run: /opt/homebrew/bin/python3.14 -m venv \"$PACKAGE_VENV\" && \"$PACKAGE_VENV/bin/python\" -m pip install pyinstaller" >&2
     exit 1
 fi
 

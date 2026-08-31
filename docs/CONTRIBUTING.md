@@ -29,7 +29,7 @@ We use GitHub to host code, track issues and feature requests, and accept pull r
 - Development requires macOS.
 - The CLI supports Python 3.9 or later.
 - GUI and packaging verification use Python 3.14.7 and Tcl/Tk 9.0.
-- Packaging uses the `.venv-package` virtual environment. Create it with `/opt/homebrew/bin/python3.14 -m venv .venv-package`, then install PyInstaller as described in [gui-packaging.md](gui-packaging.md).
+- Packaging uses the external `~/.venvs/voice-memos-exporter/package` virtual environment by default. Create it with `/opt/homebrew/bin/python3.14 -m venv "$HOME/.venvs/voice-memos-exporter/package"`, then install PyInstaller as described in [gui-packaging.md](gui-packaging.md). Set `VMX_PACKAGE_VENV` only to make `build_app.sh` use a different packaging virtual environment; see [gui-packaging.md](gui-packaging.md) for setup and build commands.
 
 ## Running tests
 
