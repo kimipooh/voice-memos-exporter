@@ -19,7 +19,7 @@ This fork revisits cases where some recordings could fail to export in certain e
 
 The GUI app is self-contained — no Python, Homebrew, or Tcl/Tk needed.
 
-1. Download `Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip` from the GitHub Releases page.
+1. Download `Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip` from the [GitHub Releases](https://github.com/kimipooh/voice-memos-exporter/releases) page.
 2. Unzip it and move `Voice Memos Exporter.app` to `/Applications`.
 3. Open the app once.
 4. If macOS blocks it, open System Settings → Privacy & Security, go to Security, click **Open**, then **Open Anyway**, and enter your login password. The app is not notarized, so Gatekeeper blocks the first launch — see [First launch is blocked](docs/troubleshooting.md#first-launch-is-blocked).

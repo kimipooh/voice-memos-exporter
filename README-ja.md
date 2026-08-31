@@ -19,7 +19,7 @@
 
 GUIアプリは自己完結型で、Python、Homebrew、Tcl/Tkは必要ありません。
 
-1. GitHub Releasesページから `Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip` をダウンロードします。
+1. [GitHub Releases](https://github.com/kimipooh/voice-memos-exporter/releases)ページから `Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip` をダウンロードします。
 2. 展開して、`Voice Memos Exporter.app` を `/Applications` へ移動します。
 3. アプリを一度開きます。
 4. macOSにブロックされた場合は、「システム設定」→「プライバシーとセキュリティ」で「セキュリティ」に移動し、「開く」→「このまま開く」の順にクリックして、ログインパスワードを入力します。このアプリはnotarizeされていないため、Gatekeeperが初回起動をブロックします。詳細は[初回起動がブロックされる](docs/troubleshooting-ja.md#初回起動がブロックされる)を参照してください。
