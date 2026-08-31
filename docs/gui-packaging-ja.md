@@ -4,7 +4,7 @@
 
 この手順の目的は、PyInstallerを使ってmacOS版Voice Memos Exporterのアプリバンドルをbuildすることです。
 
-アプリはApple Silicon（arm64）向けに、Homebrew Python 3.14.7、Tcl/Tk 9.0、PyInstaller 6.22.2でbuildします。PyInstallerはgit-ignoredのpackaging用virtual environment `.venv-package` にインストールします。
+アプリはApple Silicon（arm64）向けに、Homebrew Python 3.14.7、Tcl/Tk 9.0、PyInstaller 6.22.2でbuildします。PyInstallerは外部のpackaging用virtual environment `~/.venvs/voice-memos-exporter/package` にインストールします。
 
 ## `.app` の構成
 
@@ -13,7 +13,15 @@
 packaging環境を次のコマンドで作成します。
 
 ```bash
-/opt/homebrew/bin/python3.14 -m venv .venv-package && .venv-package/bin/python -m pip install pyinstaller
+/opt/homebrew/bin/python3.14 -m venv "$HOME/.venvs/voice-memos-exporter/package" && "$HOME/.venvs/voice-memos-exporter/package/bin/python" -m pip install pyinstaller
+```
+
+`build_app.sh` はこの標準の外部pathをデフォルトで使います。異なるpackaging用virtual environmentを使う場合は、directoryを`VMX_PACKAGE_VENV`に設定します。例えば次のようにします。
+
+```bash
+VMX_PACKAGE_VENV="$HOME/.venvs/voice-memos-exporter/package-alt"
+/opt/homebrew/bin/python3.14 -m venv "$VMX_PACKAGE_VENV" && "$VMX_PACKAGE_VENV/bin/python" -m pip install pyinstaller
+VMX_PACKAGE_VENV="$VMX_PACKAGE_VENV" bash packaging/build_app.sh
 ```
 
 アプリをbuildします。

@@ -5,8 +5,8 @@
 This workflow builds the macOS Voice Memos Exporter app bundle with PyInstaller.
 
 The app is built for Apple Silicon with Homebrew Python 3.14.7 (arm64),
-Tcl/Tk 9.0, and PyInstaller 6.22.2. PyInstaller is installed in the
-git-ignored `.venv-package` virtual environment.
+Tcl/Tk 9.0, and PyInstaller 6.22.2. PyInstaller is installed in the external
+`~/.venvs/voice-memos-exporter/package` virtual environment.
 
 ## App bundle
 
@@ -18,7 +18,17 @@ supported. The main executable is under `Contents/MacOS`, its metadata is in
 Set up the packaging environment with:
 
 ```bash
-/opt/homebrew/bin/python3.14 -m venv .venv-package && .venv-package/bin/python -m pip install pyinstaller
+/opt/homebrew/bin/python3.14 -m venv "$HOME/.venvs/voice-memos-exporter/package" && "$HOME/.venvs/voice-memos-exporter/package/bin/python" -m pip install pyinstaller
+```
+
+`build_app.sh` uses that standard external path by default. To use a different
+packaging virtual environment, set `VMX_PACKAGE_VENV` to its directory. For
+example:
+
+```bash
+VMX_PACKAGE_VENV="$HOME/.venvs/voice-memos-exporter/package-alt"
+/opt/homebrew/bin/python3.14 -m venv "$VMX_PACKAGE_VENV" && "$VMX_PACKAGE_VENV/bin/python" -m pip install pyinstaller
+VMX_PACKAGE_VENV="$VMX_PACKAGE_VENV" bash packaging/build_app.sh
 ```
 
 Build the app with:
