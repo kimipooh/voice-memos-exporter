@@ -24,8 +24,11 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 3. Activate virtual environment: 
    - Windows: `venv\Scripts\activate`
    - Unix/MacOS: `source venv/bin/activate`
-4. Run the CLI: `python3 export_voice_memos.py --help`
+4. Run both front ends: `python3 export_voice_memos.py --help` and `python3 voice_memos_exporter.py`
 5. Run the tests: `python3 -m unittest discover -s tests -v`
 
 ## License
-The upstream repository has no formal `LICENSE` file, so its licensing terms are currently unclear. Do not assume that this repository is MIT licensed; see the root README for details.
+This project is licensed under the MIT License; see [LICENSE](../LICENSE).
+The upstream project `rudrakabir/voice-memos-exporter` publishes the same MIT
+License. By contributing, you agree that your contributions are licensed under
+the MIT License.
