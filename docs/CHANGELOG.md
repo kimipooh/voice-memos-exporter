@@ -1,5 +1,7 @@
 # Changelog
 
+[日本語版: CHANGELOG-ja.md](CHANGELOG-ja.md)
+
 All notable changes to Voice Memos Exporter will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -45,6 +47,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   local Full Disk Access grants for the former identifier must be re-approved.
 - Renamed the packaging build helper and the GUI notes and packaging documents
   to their publication-ready names.
+
+### Documentation
+
+- Added `docs/troubleshooting.md` and `docs/troubleshooting-ja.md` covering
+  first-launch Gatekeeper approval, Full Disk Access, `Voice Memos database not
+  found`, locked databases, iCloud-only recordings, skipped/failed exports, and
+  Recently Deleted.
+- Documented that on macOS 15 Sequoia and later, Gatekeeper must be overridden
+  from System Settings > Privacy & Security rather than by Control-clicking.
+- Added Japanese counterparts `docs/gui-packaging-ja.md`, `docs/CHANGELOG-ja.md`,
+  and `docs/CONTRIBUTING-ja.md`, with cross-links between every language pair.
+- Streamlined `README.md` and `README-ja.md` into an entry point, moving the full
+  CLI option reference, examples, and Full Disk Access detail into `docs/`.
 
 ## [1.0.0-fork] - 2026-08-27
 
