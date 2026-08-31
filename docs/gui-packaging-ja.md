@@ -38,13 +38,40 @@ bundleはad-hoc署名のみで、Apple Developer ID証明書による署名もno
 
 ## Release asset
 
-配布用ZIPは次のコマンドで作成します。
+正式なrelease手順は、build → test → package → verify → cleanupです。
+
+```bash
+bash packaging/build_app.sh
+/usr/bin/python3 -m unittest discover -s tests -t .
+bash packaging/package_app.sh
+```
+
+`package_app.sh` はbuild済みのアプリをpackageするだけであり、
+`build_app.sh` を呼び出しません。対象アプリ自身の `Contents/Info.plist` から
+versionを読み取り、`Voice-Memos-Exporter-vVERSION-macOS-arm64.zip` を作成します。
+同期ストレージ外の一時directoryへZIPを展開して、ZIP、plist metadata、bundle構成、
+実行権限、symbolic link、file/path数、main executableのSHA-256、bundled selftestを
+検証します。すべて成功した場合に限り、`dist/Voice Memos Exporter.app` を削除します。
+失敗時は、調査できるよう元の `.app` と新たに作成したZIPを残し、一時検証directory
+だけを削除します。同名の既存ZIPは絶対に上書きしません。
+
+Google Driveなどの同期ストレージ配下に、展開状態の `.app` を放置しないでください。
+実際に同期によってbundle内のsymbolic linkが消失し、main executableの実行権限が
+劣化したことがあります。検証済みZIPを配布成果物として保持します。
+
+スクリプト内部では次の `ditto` コマンドを実行します。手動で慎重にpackageする場合も
+同じコマンドを使えます。
 
 ```bash
 cd dist
 ditto -c -k --sequesterRsrc --keepParent \
   "Voice Memos Exporter.app" \
-  "Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip"
+  "Voice-Memos-Exporter-vVERSION-macOS-arm64.zip"
 ```
 
-bundleのsymlinkとresource forkを保持するため、`zip` ではなく `ditto` を使います。release ZIPは `dist/Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip` です。
+bundleのsymlinkとresource forkを保持するため、`zip` ではなく `ditto` を使います。
+scriptの正式手順を実行した後、ZIPだけが残り展開状態のappが削除されたことを確認します。
+
+```bash
+ls -la dist/
+```

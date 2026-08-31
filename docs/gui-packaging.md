@@ -53,14 +53,43 @@ and not notarized. Gatekeeper therefore blocks the first launch; see
 
 ## Release asset
 
-Create the distributable zip with:
+The formal release flow is build, test, package, verify, then cleanup:
+
+```bash
+bash packaging/build_app.sh
+/usr/bin/python3 -m unittest discover -s tests -t .
+bash packaging/package_app.sh
+```
+
+`package_app.sh` packages the already-built app; it does not call
+`build_app.sh`. It reads the version from that app's `Contents/Info.plist`,
+creates `Voice-Memos-Exporter-vVERSION-macOS-arm64.zip`, and verifies the ZIP
+by expanding it in a temporary directory outside synced storage. The checks
+cover the ZIP, plist metadata, bundle layout, executable permission, symbolic
+links, file/path counts, the main executable SHA-256, and the bundled selftest.
+Only after every check passes does it remove `dist/Voice Memos Exporter.app`.
+On any failure the source app and any newly created ZIP are retained for
+inspection; only the temporary verification directory is removed. A same-name
+existing ZIP is never overwritten.
+
+Do not leave an expanded `.app` in Google Drive or other synced storage.
+In practice, synced storage has removed bundle symlinks and degraded the main
+executable's permission; retain the verified ZIP as the release artifact.
+
+The script internally uses this `ditto` command. It remains useful for a
+manual, deliberate package operation:
 
 ```bash
 cd dist
 ditto -c -k --sequesterRsrc --keepParent \
   "Voice Memos Exporter.app" \
-  "Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip"
+  "Voice-Memos-Exporter-vVERSION-macOS-arm64.zip"
 ```
 
 Use `ditto`, not `zip`, so the bundle's symlinks and resource forks survive.
-The release ZIP is `dist/Voice-Memos-Exporter-v1.1.0-macOS-arm64.zip`.
+After running the scripted flow, confirm the ZIP remains and the expanded app
+has been removed:
+
+```bash
+ls -la dist/
+```
