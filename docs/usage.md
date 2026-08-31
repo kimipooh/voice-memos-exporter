@@ -53,6 +53,20 @@ python3 export_voice_memos.py \
 
 For how the local `DATE` value is derived from the database, see [design.md](design.md).
 
+## Examples
+
+Include recordings in Recently Deleted:
+
+```bash
+python3 export_voice_memos.py --all --include-trash --output ~/Desktop/voice-memos-export
+```
+
+Preview an export without writing anything:
+
+```bash
+python3 export_voice_memos.py --all --dry-run --output ~/Desktop/voice-memos-export
+```
+
 ## Recently Deleted (trash)
 
 By default, recordings in Recently Deleted are excluded from listing, searching, dry runs, and export. Add `--include-trash` to include them. Text listings then add a `STATUS` column; JSON objects always include an additive `status` field (`active` or `trash`).

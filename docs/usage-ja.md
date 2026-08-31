@@ -53,6 +53,20 @@ python3 export_voice_memos.py \
 
 ローカルの `DATE` 値がデータベースからどう算出されるかは [design-ja.md](design-ja.md) を参照してください。
 
+## 使用例
+
+「最近削除した項目」の録音を含める:
+
+```bash
+python3 export_voice_memos.py --all --include-trash --output ~/Desktop/voice-memos-export
+```
+
+何も書き込まずに書き出し結果を確認する:
+
+```bash
+python3 export_voice_memos.py --all --dry-run --output ~/Desktop/voice-memos-export
+```
+
 ## 「最近削除した項目」
 
 既定では、「最近削除した項目」の録音を一覧、検索、dry-run、書き出しから除外します。含める場合は `--include-trash` を指定してください。テキスト一覧には `STATUS` 列が追加され、JSONオブジェクトには常に追加フィールド `status`（`active` または `trash`）が含まれます。
