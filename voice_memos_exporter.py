@@ -1,4 +1,4 @@
-"""Voice Memos Exporter — local-only Tkinter GUI.
+"""Voice Memos Exporter — macOS Tkinter GUI front end.
 
 Provenance
 ----------
@@ -7,10 +7,8 @@ Only the upstream UI structure and interaction model are reused here.
 All database access and export logic were replaced by this fork's
 ``vmx_core`` module; no upstream DB or export code remains in this file.
 
-The upstream repository has no clear license file, so the license status of
-the upstream-derived UI structure is currently unresolved. This file therefore
-lives only on the local branch ``gui/local-app`` and is NOT for publication,
-redistribution, or release until that status is resolved.
+Original work (c) 2026 rudrakabir; fork modifications (c) 2026 Kimiya Kitani.
+Licensed under the MIT License. See the LICENSE file at the repository root.
 """
 
 import json
@@ -48,7 +46,7 @@ from vmx_core import (
 )
 
 APP_NAME = "Voice Memos Exporter"
-APP_VERSION = "1.0.0"
+APP_VERSION = vmx_core.TOOL_VERSION
 UPSTREAM_PROJECT = "rudrakabir/voice-memos-exporter"
 APP_COPYRIGHT = "Original work © rudrakabir; fork modifications © 2026 Kimiya Kitani"
 COLUMNS = ("title", "date", "duration", "local", "status", "checked")
@@ -118,8 +116,7 @@ def about_text():
             "Fork modifications:",
             "© 2026 Kimiya Kitani",
             "",
-            "For local use only.",
-            "Not for redistribution.",
+            "Licensed under the MIT License.",
         ]
     )
 

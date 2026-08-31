@@ -1,6 +1,4 @@
-# Local-only packaging spec for the gui/local-app branch.
-# Not for publication, redistribution, or release.
-# Upstream license status is unresolved.
+# PyInstaller spec for the macOS Voice Memos Exporter app bundle.
 
 import os
 
@@ -52,12 +50,12 @@ app = BUNDLE(
     coll,
     name="Voice Memos Exporter.app",
     icon=None,
-    bundle_identifier="jp.kitani.voicememosexporter.local",
+    bundle_identifier="jp.kitani.voicememosexporter",
     info_plist={
         "CFBundleName": "Voice Memos Exporter",
         "CFBundleDisplayName": "Voice Memos Exporter",
-        "CFBundleShortVersionString": "1.0.0",
-        "CFBundleVersion": "1.0.0",
+        "CFBundleShortVersionString": "1.1.0",
+        "CFBundleVersion": "1.1.0",
         "NSHumanReadableCopyright": "Original work © rudrakabir; fork modifications © 2026 Kimiya Kitani",
         "NSHighResolutionCapable": True,
         "LSApplicationCategoryType": "public.app-category.utilities",

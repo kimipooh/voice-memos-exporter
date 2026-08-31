@@ -24,7 +24,7 @@ DEFAULT_DB_PATH = os.path.expanduser(
     "~/Library/Group Containers/group.com.apple.VoiceMemos.shared/Recordings/CloudRecordings.db"
 )
 APPLE_EPOCH_OFFSET = 978307200
-TOOL_VERSION = "1.0.3"
+TOOL_VERSION = "1.1.0"
 
 
 class DbStatus(Enum):

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local-only build helper. Do not distribute the resulting app bundle.
+# Build the macOS Voice Memos Exporter app bundle with PyInstaller.
 
 set -euo pipefail
 

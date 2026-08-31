@@ -33,8 +33,9 @@ class PackagingMetadataTests(unittest.TestCase):
         )
 
         self.assertIn(APP_COPYRIGHT, spec)
-        self.assertIn("jp.kitani.voicememosexporter.local", spec)
-        self.assertIn("1.0.0", spec)
+        self.assertIn("jp.kitani.voicememosexporter", spec)
+        self.assertNotIn("jp.kitani.voicememosexporter" + ".local", spec)
+        self.assertIn("1.1.0", spec)
 
 
 @unittest.skipUnless(APP.exists(), "packaged .app not built")
@@ -59,12 +60,10 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertTrue(INFO_PLIST.is_file())
         with INFO_PLIST.open("rb") as handle:
             info = plistlib.load(handle)
-        self.assertEqual(
-            info["CFBundleIdentifier"], "jp.kitani.voicememosexporter.local"
-        )
+        self.assertEqual(info["CFBundleIdentifier"], "jp.kitani.voicememosexporter")
         self.assertEqual(info["NSHumanReadableCopyright"], APP_COPYRIGHT)
-        self.assertEqual(info["CFBundleShortVersionString"], "1.0.0")
-        self.assertEqual(info["CFBundleVersion"], "1.0.0")
+        self.assertEqual(info["CFBundleShortVersionString"], "1.1.0")
+        self.assertEqual(info["CFBundleVersion"], "1.1.0")
 
     def test_bundled_tcl_tk_libraries_exist(self):
         self.assertTrue(list(FRAMEWORKS.glob("libtcl9*.dylib")))
